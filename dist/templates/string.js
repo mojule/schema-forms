@@ -1,0 +1,62 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const H = require("@mojule/h");
+const utils_1 = require("../utils");
+const formatToType = {
+    'date-time': 'datetime-local',
+    uri: 'url'
+};
+exports.StringEditor = (document) => {
+    const { input, textarea } = H(document);
+    const stringEditor = (meta) => {
+        const { schema } = meta;
+        if (schema.format === 'multiline')
+            return textareaEditor(meta);
+        return textEditor(meta);
+    };
+    const textEditor = (meta) => {
+        const { schema } = meta;
+        const attributes = stringAttributes(meta);
+        if (utils_1.isRequired(meta))
+            attributes.required = '';
+        if ('pattern' in schema) {
+            attributes.pattern = schema.pattern;
+        }
+        let type = 'text';
+        if (schema.format) {
+            if (schema.format in formatToType) {
+                type = formatToType[schema.format];
+            }
+            else {
+                type = schema.format;
+            }
+        }
+        attributes.type = type;
+        if (schema.default)
+            attributes.value = String(schema.default);
+        const element = input(attributes);
+        return element;
+    };
+    const textareaEditor = (meta) => {
+        const { schema } = meta;
+        const attributes = stringAttributes(meta);
+        if (utils_1.isRequired(meta))
+            attributes.required = '';
+        const text = schema.default ? String(schema.default) : '';
+        const element = textarea(attributes, text);
+        return element;
+    };
+    return stringEditor;
+};
+const stringAttributes = ({ schema }) => {
+    const attributes = {};
+    attributes.title = schema.title || 'String';
+    if ('minLength' in schema) {
+        attributes.minlength = String(schema.minLength);
+    }
+    if ('maxLength' in schema) {
+        attributes.maxlength = String(schema.maxLength);
+    }
+    return attributes;
+};
+//# sourceMappingURL=string.js.map
