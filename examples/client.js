@@ -1039,16 +1039,229 @@ function hasOwnProperty(obj, prop) {
 },{"./support/isBuffer":5,"_process":3,"inherits":4}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const on_mutate_1 = require("./on-mutate");
+const name_decorator_1 = require("../decorators/name-decorator");
+exports.arrayify = (element) => {
+    const arrayEls = Array.from(element.querySelectorAll('[data-type="array"]'));
+    arrayEls.forEach(arrayEl => {
+        const itemEl = arrayEl.firstElementChild;
+        if (!itemEl)
+            return;
+        const title = arrayEl.dataset.title || 'Array';
+        const template = document.createElement('template');
+        const ol = document.createElement('ol');
+        const li = document.createElement('li');
+        li.appendChild(itemEl);
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.innerText = `Delete ${title}`;
+        deleteButton.classList.add('action-delete');
+        li.appendChild(deleteButton);
+        template.content.appendChild(li.cloneNode(true));
+        arrayEl.appendChild(ol);
+        arrayEl.appendChild(template);
+        const addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.innerText = `Add ${title}`;
+        addButton.onclick = e => {
+            e.preventDefault();
+            const fragment = template.content.cloneNode(true);
+            const li = fragment.querySelector('li');
+            ol.appendChild(li);
+            setKeys(ol);
+            on_mutate_1.onMutate(li);
+        };
+        arrayEl.appendChild(addButton);
+    });
+    const deleteButtons = Array.from(document.querySelectorAll('button.action-delete'));
+    deleteButtons.forEach(button => {
+        button.onclick = e => {
+            e.preventDefault();
+            const li = button.closest('li');
+            const ol = li.closest('ol');
+            li.remove();
+            setKeys(ol);
+            on_mutate_1.onMutate(ol);
+        };
+    });
+    name_decorator_1.nameDecorator(element);
+};
+const setKeys = (ol) => {
+    const children = Array.from(ol.children);
+    children.forEach((child, index) => child.dataset.key = String(index));
+};
+
+},{"../decorators/name-decorator":12,"./on-mutate":8}],8:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const arrayify_1 = require("./arrayify");
+const selectify_1 = require("./selectify");
+exports.onMutate = (element) => {
+    selectify_1.selectify(element);
+    arrayify_1.arrayify(element);
+};
+
+},{"./arrayify":7,"./selectify":9}],9:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const enum_1 = require("../templates/enum");
+const label_decorator_1 = require("../decorators/label-decorator");
+const name_decorator_1 = require("../decorators/name-decorator");
+const on_mutate_1 = require("./on-mutate");
+const utils_1 = require("../utils");
+const enumEditor = enum_1.EnumEditor(document);
+const labelDecorator = label_decorator_1.LabelDecorator(document);
+exports.selectify = (element) => {
+    const selectableEls = Array.from(element.querySelectorAll('[data-one-of], [data-any-of]'));
+    selectableEls.forEach(selectableEl => {
+        const itemEls = Array.from(selectableEl.children);
+        if (itemEls.length === 0)
+            return;
+        const titles = itemEls.map((el, i) => {
+            const titleEl = utils_1.inclusiveSelect(el, '[data-title]');
+            return titleEl.dataset.title || String(i + 1);
+        });
+        const selectorEnum = {
+            title: selectableEl.dataset.title || 'One Of',
+            type: 'string',
+            enum: titles
+        };
+        const selector = enumEditor({
+            schema: selectorEnum,
+            pointer: '',
+            root: selectorEnum
+        });
+        selector.classList.add('selector');
+        selectableEl.appendChild(selector);
+        labelDecorator(selector);
+        itemEls.forEach((itemEl, i) => {
+            delete itemEl.dataset.key;
+            const template = document.createElement('template');
+            template.dataset.index = String(i);
+            template.content.appendChild(itemEl);
+            selectableEl.appendChild(template);
+        });
+        const choose = (index) => {
+            const existing = Array.from(selectableEl.children);
+            existing.forEach(el => {
+                if (el !== selector && el.localName !== 'template')
+                    el.remove();
+            });
+            const template = selectableEl.querySelector(`template[data-index="${index}"]`);
+            const el = template.content.cloneNode(true);
+            selectableEl.appendChild(el);
+            name_decorator_1.nameDecorator(selectableEl);
+            on_mutate_1.onMutate(selectableEl);
+        };
+        // could be either radios or select
+        const radios = Array.from(selector.querySelectorAll('input[type="radio"]'));
+        radios.forEach((input, i) => {
+            input.addEventListener('click', e => {
+                radios.forEach(current => current.checked = current === input);
+                choose(i);
+            });
+            if (i === 0)
+                input.checked = true;
+            choose(0);
+        });
+        const select = utils_1.inclusiveSelect(selector, 'select');
+        if (select) {
+            select.onchange = () => {
+                const i = select.selectedIndex;
+                choose(i);
+            };
+            choose(0);
+        }
+    });
+};
+
+},{"../decorators/label-decorator":11,"../decorators/name-decorator":12,"../templates/enum":15,"../utils":16,"./on-mutate":8}],10:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.formElementSelector = 'input, textarea, select';
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const H = require("@mojule/h");
+const consts_1 = require("../consts");
+exports.LabelDecorator = (document) => {
+    const { label, span } = H(document);
+    const labelDecorator = (editor) => {
+        const inputs = Array.from(editor.querySelectorAll(consts_1.formElementSelector));
+        inputs.forEach(input => {
+            if (!input)
+                return;
+            const title = input.title || editor.dataset.title;
+            if (!title)
+                return;
+            const inputLabel = label();
+            input.before(inputLabel);
+            inputLabel.appendChild(input);
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                input.after(span(` ${title}`));
+            }
+            else if (input.type !== 'hidden') {
+                input.before(span(`${title} `));
+            }
+        });
+    };
+    return labelDecorator;
+};
+
+},{"../consts":10,"@mojule/h":19}],12:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = require("../utils");
+const consts_1 = require("../consts");
+exports.nameDecorator = (editor) => {
+    const input = utils_1.inclusiveSelect(editor, consts_1.formElementSelector);
+    if (!input)
+        return;
+    const selectorAncestor = input.closest('.selector');
+    if (selectorAncestor)
+        return;
+    const name = exports.getName(input);
+    const { type } = editor.dataset;
+    input.name = `${name}#${type}`;
+};
+exports.getName = (el) => {
+    let name = '';
+    let nextKeyEl = el.closest('[data-key]');
+    while (nextKeyEl) {
+        name = `/${nextKeyEl.dataset.key}${name}`;
+        nextKeyEl = utils_1.exclusiveClosest(nextKeyEl, '[data-key]');
+    }
+    return name;
+};
+
+},{"../consts":10,"../utils":16}],13:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const get_data_1 = require("../get-data");
+const on_mutate_1 = require("../client/on-mutate");
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('form');
+    const submit = document.querySelector('input[type="submit"]');
+    submit.onclick = e => {
+        e.preventDefault();
+        const value = get_data_1.getData(form);
+        console.log(value);
+        const formData = new FormData(form);
+        const entries = Array.from(formData.entries()).map(([key, value]) => [key, String(value)]);
+        console.log(entries);
+    };
+    on_mutate_1.onMutate(form);
+});
+
+},{"../client/on-mutate":8,"../get-data":14}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const json_pointer_1 = require("@mojule/json-pointer");
-const form_element_selector_1 = require("./form-element-selector");
+const consts_1 = require("./consts");
 exports.getData = (parent) => {
     const flat = {};
-    const namedElements = Array.from(parent.querySelectorAll(form_element_selector_1.formElementSelector));
+    const namedElements = Array.from(parent.querySelectorAll(consts_1.formElementSelector));
     namedElements.forEach(namedElement => {
         const [name] = namedElement.name.split('#');
         const editor = namedElement.closest('.editor');
@@ -1100,24 +1313,805 @@ exports.getData = (parent) => {
     return data;
 };
 
-},{"./form-element-selector":7,"@mojule/json-pointer":12}],9:[function(require,module,exports){
+},{"./consts":10,"@mojule/json-pointer":22}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const get_data_1 = require("../get-data");
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('form');
-    const submit = document.querySelector('input[type="submit"]');
-    submit.onclick = e => {
-        e.preventDefault();
-        const value = get_data_1.getData(form);
-        console.log(value);
-        const formData = new FormData(form);
-        const entries = Array.from(formData.entries()).map(([key, value]) => [key, String(value)]);
-        console.log(entries);
+const H = require("@mojule/h");
+const utils_1 = require("../utils");
+exports.EnumEditor = (document) => {
+    const { select, option, div, input } = H(document);
+    const enumEditor = (meta) => {
+        const { schema } = meta;
+        if (schema.enum === undefined || schema.enum.length < 2)
+            throw Error('enum should have at least 2 members');
+        if (schema.format && schema.format === 'radio') {
+            return radioEditor(meta);
+        }
+        if (schema.enum.length < 5) {
+            return radioEditor(meta);
+        }
+        return selectEditor(meta);
     };
-});
+    const radioEditor = ({ schema }) => {
+        const container = div({ data: { enumType: 'radio' } });
+        schema.enum.forEach((value, i) => {
+            value = String(value);
+            const title = schema._esTitles ? schema._esTitles[i] : value;
+            const attributes = { type: 'radio', value, title };
+            if (value === schema.default) {
+                attributes.checked = '';
+            }
+            const radio = input(attributes);
+            container.appendChild(radio);
+        });
+        return container;
+    };
+    const selectEditor = (meta) => {
+        const { schema } = meta;
+        const attributes = {
+            data: { enumType: 'select' }
+        };
+        if (utils_1.isRequired(meta))
+            attributes.required = '';
+        const element = select(attributes);
+        schema.enum.forEach((value, i) => {
+            value = String(value);
+            const title = schema._esTitles ? schema._esTitles[i] : value;
+            const optionAttributes = { value };
+            if (value === schema.default) {
+                optionAttributes.selected = '';
+            }
+            const item = option(optionAttributes, title);
+            element.appendChild(item);
+        });
+        return element;
+    };
+    return enumEditor;
+};
 
-},{"../get-data":8}],10:[function(require,module,exports){
+},{"../utils":16,"@mojule/h":19}],16:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.exclusiveClosest = (el, selector) => {
+    if (!el.parentElement)
+        return;
+    return el.parentElement.closest(selector);
+};
+exports.inclusiveSelect = (el, selector) => {
+    if (el.matches(selector))
+        return el;
+    return el.querySelector(selector);
+};
+exports.isContainer = ({ schema }) => (schema.type === 'object' || schema.type === 'array' || schema.oneOf ||
+    schema.anyOf);
+exports.isRequired = (meta) => {
+    if (meta.keyIndex && meta.parentSchema &&
+        Array.isArray(meta.parentSchema.required) &&
+        meta.parentSchema.required.includes(String(meta.keyIndex)))
+        return true;
+    return false;
+};
+
+},{}],17:[function(require,module,exports){
+'use strict'
+
+const utils = require( '@mojule/utils' )
+const data = require( './src/data.json' )
+
+const { clone } = utils
+
+const elementMeta = () => clone( data )
+
+module.exports = elementMeta
+
+},{"./src/data.json":18,"@mojule/utils":23}],18:[function(require,module,exports){
+module.exports={
+  "html": {
+    "content": [ "<head>", "<body>" ],
+    "singular": true
+  },
+  "head": {
+    "content": [ "metadata content" ],
+    "parent": [ "<html>" ],
+    "singular": true
+  },
+  "body": {
+    "categories": [ "sectioning root" ],
+    "content": [ "flow content" ],
+    "parent": [ "<html>" ],
+    "singular": true
+  },
+
+  "title": {
+    "categories": [ "metadata content" ],
+    "content": [ "text" ],
+    "parent": [ "<head>" ],
+    "singular": true
+  },
+  "base": {
+    "categories": [ "metadata content" ],
+    "parent": [ "<head>" ],
+    "singular": true
+  },
+  "link": {
+    "categories": [ "metadata content" ],
+    "parent": [ "<head>" ]
+  },
+  "meta": {
+    "categories": [ "metadata content" ],
+    "parent": [ "<head>" ]
+  },
+  "style": {
+    "categories": [ "metadata content" ],
+    "content": [ "text" ],
+    "parent": [ "<head>" ]
+  },
+
+  "address": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "flow content" ],
+    "disallow": [ "<address>", "heading content", "sectioning content", "<header>", "<footer>" ]
+  },
+  "article": {
+    "categories": [ "flow content", "sectioning content", "palpable content" ],
+    "content": [ "flow content" ],
+    "disallow": [ "<main>" ],
+    "nospec": [ "4.01" ]
+  },
+  "aside": {
+    "categories": [ "flow content", "sectioning content", "palpable content" ],
+    "content": [ "flow content" ],
+    "disallow": [ "<main>" ],
+    "nospec": [ "4.01" ]
+  },
+  "footer": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "flow content" ],
+    "disallow": [ "<footer>", "<header>", "<main>" ],
+    "nospec": [ "4.01" ]
+  },
+  "header": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "flow content" ],
+    "disallow": [ "<footer>", "<header>", "<main>" ],
+    "nospec": [ "4.01" ]
+  },
+  "h1": {
+    "categories": [ "flow content", "heading content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "h2": {
+    "categories": [ "flow content", "heading content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "h3": {
+    "categories": [ "flow content", "heading content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "h4": {
+    "categories": [ "flow content", "heading content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "h5": {
+    "categories": [ "flow content", "heading content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "h6": {
+    "categories": [ "flow content", "heading content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "nav": {
+    "categories": [ "flow content", "sectioning content", "palpable content" ],
+    "content": [ "flow content" ],
+    "disallow": [ "<main>" ],
+    "nospec": [ "4.01" ]
+  },
+
+  "blockquote": {
+    "categories": [ "flow content", "sectioning root", "palpable content" ],
+    "content": [ "flow content" ]
+  },
+  "dd": {
+    "content": [ "flow content" ],
+    "parent": [ "<dl>" ],
+    "previous": [ "<dt>", "<dd>" ]
+  },
+  "div": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "flow content" ]
+  },
+  "dl": {
+    "categories": [ "flow content" ],
+    "content": [ "<dt>", "<dd>" ]
+  },
+  "dt": {
+    "content": [ "flow content" ],
+    "parent": [ "<dl>" ],
+    "disallow": [ "<footer>", "<header>", "sectioning content", "heading content" ],
+    "next": [ "<dt>", "<dd>" ]
+  },
+  "figcaption": {
+    "content": [ "flow content" ],
+    "parent": [ "<figure>" ],
+    "position": [ "first", "last" ],
+    "nospec": [ "4.01" ]
+  },
+  "figure": {
+    "categories": [ "flow content", "sectioning root", "palpable content" ],
+    "content": [ "flow content", "<figcaption>" ],
+    "nospec": [ "4.01" ]
+  },
+  "hr": {
+    "categories": [ "flow content" ]
+  },
+  "li": {
+    "content": [ "flow content" ],
+    "parent": [ "<ul>", "<ol>", "<menu>" ]
+  },
+  "main": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "flow content" ],
+    "nospec": [ "4.01" ]
+  },
+  "ol": {
+    "categories": [ "flow content" ],
+    "content": [ "<li>" ],
+    "states": {
+      ":not(:empty)": {
+        "categories": [ "palpable content" ]
+      }
+    }
+  },
+  "p": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "pre": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "section": {
+    "categories": [ "flow content", "sectioning content", "palpable content" ],
+    "content": [ "flow content" ],
+    "nospec": [ "4.01" ]
+  },
+  "ul": {
+    "categories": [ "flow content" ],
+    "content": [ "<li>" ],
+    "states": {
+      ":not(:empty)": {
+        "categories": [ "palpable content" ]
+      }
+    }
+  },
+
+  "a": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "flow content", "phrasing content" ],
+    "disallow": [ "interactive content" ],
+    "states": {
+      "[href]" : {
+        "categories": [ "interactive content" ]
+      }
+    }
+  },
+  "abbr": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "b": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "bdi": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "nospec": [ "4.01" ]
+  },
+  "bdo": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "nospec": [ "4.01" ]
+  },
+  "br": {
+    "categories": [ "flow content", "phrasing content" ]
+  },
+  "cite": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "code": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "data": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "nospec": [ "4.01" ]
+  },
+  "dfn": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "disallow": [ "<dfn>" ]
+  },
+  "em": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "i": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "kbd": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "mark": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "nospec": [ "4.01" ]
+  },
+  "q": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "rp": {
+    "content": [ "phrasing content" ],
+    "parent": [ "<ruby>" ],
+    "nospec": [ "4.01" ]
+  },
+  "rt": {
+    "content": [ "phrasing content" ],
+    "parent": [ "<ruby>", "<rtc>" ],
+    "nospec": [ "4.01" ]
+  },
+  "rtc": {
+    "content": [ "phrasing content", "<rt>" ],
+    "parent": [ "<ruby>" ],
+    "nospec": [ "4.01" ]
+  },
+  "ruby": {
+    "categories": [ "flow content", "phrasing content" ],
+    "content": [ "phrasing content", "<rp>", "<rt>", "<rtc>" ],
+    "nospec": [ "4.01" ]
+  },
+  "s": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "samp": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "small": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "span": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "strong": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "sub": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "sup": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "time": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "nospec": [ "4.01" ]
+  },
+  "u": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "var": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "wbr": {
+    "categories": [ "flow content", "phrasing content" ],
+    "nospec": [ "4.01" ]
+  },
+
+  "area": {
+    "categories": [ "flow content", "phrasing content" ],
+    "ancestor": [ "<map>" ]
+  },
+  "audio": {
+    "categories": [ "flow content", "phrasing content", "embedded content" ],
+    "content": [ "transparent", "<track>" ],
+    "disallow": [ "<audio>", "<video>" ],
+    "states": {
+      "[controls]": {
+        "categories": [ "interactive content", "palpable content" ]
+      },
+      ":not([src])": {
+        "content": [ "<source>" ]
+      }
+    },
+    "nospec": [ "4.01" ]
+  },
+  "map": {
+    "categories": [ "flow content", "phrasing content", "palpable content" ],
+    "content": [ "transparent", "<area>" ]
+  },
+  "track": {
+    "parent": [ "<audio>", "<video>" ],
+    "nospec": [ "4.01" ]
+  },
+  "video": {
+    "categories": [ "flow content", "phrasing content", "embedded content" ],
+    "content": [ "transparent", "<track>" ],
+    "disallow": [ "<audio>", "<video>" ],
+    "states": {
+      "[controls]": {
+        "categories": [ "interactive content", "palpable content" ]
+      },
+      ":not([src])": {
+        "content": [ "<source>" ]
+      }
+    },
+    "nospec": [ "4.01" ]
+  },
+
+  "embed": {
+    "categories": [ "flow content", "phrasing content", "embedded content", "interactive content", "palpable content" ],
+    "nospec": [ "4.01" ]
+  },
+  "iframe": {
+    "categories": [ "flow content", "phrasing content", "embedded content", "interactive content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "disallow": [ "<script>" ]
+  },
+  "img": {
+    "categories": [ "flow content", "phrasing content", "embedded content", "palpable content" ],
+    "states": {
+      "[usemap]": {
+        "categories": [ "interactive content" ]
+      }
+    }
+  },
+  "object": {
+    "categories": [ "flow content", "phrasing content", "embedded content", "palpable content", "form-associated content", "listed", "submittable" ],
+    "content": [ "transparent", "<param>" ],
+    "states": {
+      "[usemap]": {
+        "categories": [ "interactive content" ]
+      }
+    }
+  },
+  "param": {
+    "parent": [ "<object>" ]
+  },
+  "source": {
+    "parent": [ "<picture>", "<audio>", "<video>" ],
+    "position": [ "first" ],
+    "nospec": [ "4.01" ]
+  },
+
+  "canvas": {
+    "categories": [ "flow content", "phrasing content", "embedded content", "palpable content" ],
+    "content": [ "transparent" ],
+    "nospec": [ "4.01" ]
+  },
+  "noscript": {
+    "categories": [ "flow content", "phrasing content", "metadata content" ],
+    "disallow": [ "<noscript>" ],
+    "states": {
+      "head > noscript": {
+        "content": [ "<link>", "<style>", "<meta>" ]
+      },
+      ":not( head > noscript )": {
+        "content": [ "transparent" ]
+      }
+    }
+  },
+  "script": {
+    "categories": [ "flow content", "phrasing content", "metadata content" ],
+    "content": [ "text" ]
+  },
+  "template": {
+    "categories": [ "metadata content", "flow content", "phrasing content" ],
+    "content": [ "metadata content", "flow content" ],
+    "parent": [ "body", "head", "colgroup" ],
+    "nospec": [ "4.01" ]
+  },
+
+  "del": {
+    "categories": [ "flow content", "phrasing content" ],
+    "content": [ "transparent" ]
+  },
+  "ins": {
+    "categories": [ "flow content", "phrasing content" ],
+    "content": [ "transparent" ]
+  },
+
+  "caption": {
+    "content": [ "flow content" ],
+    "parent": [ "<table>" ],
+    "position": [ "first" ]
+  },
+  "col": {
+    "parent": [ "<colgroup>" ]
+  },
+  "colgroup": {
+    "parent": [ "<table>" ],
+    "states": {
+      ":not([span])": {
+        "content": [ "<col>" ]
+      }
+    }
+  },
+  "table": {
+    "categories": [ "flow content" ],
+    "content": [ "<caption>", "<colgroup>", "<thead>", "<tbody>", "<tfoot>", "<tr>" ]
+  },
+  "tbody": {
+    "content": [ "<tr>" ],
+    "parent": [ "<table>" ]
+  },
+  "td": {
+    "content": [ "flow content", "phrasing content" ],
+    "parent": [ "<tr>" ]
+  },
+  "tfoot": {
+    "content": [ "<tr>" ],
+    "parent": [ "<table>" ]
+  },
+  "th": {
+    "content": [ "phrasing content" ],
+    "parent": [ "<tr>" ]
+  },
+  "thead": {
+    "content": [ "<tr>" ],
+    "parent": [ "<table>" ]
+  },
+  "tr": {
+    "content": [ "<th>", "<td>" ],
+    "parent": [ "<table>", "<thead>", "<tbody>", "<tfoot>" ]
+  },
+
+  "button": {
+    "categories": [ "flow content", "phrasing content", "interactive content", "form-associated content", "listed", "labelable", "submittable", "palpable content" ],
+    "content": [ "phrasing content" ]
+  },
+  "datalist": {
+    "categories": [ "flow content", "phrasing content" ],
+    "content": [ "phrasing content", "<option>" ],
+    "nospec": [ "4.01" ]
+  },
+  "fieldset": {
+    "categories": [ "flow content", "sectioning root", "form-associated content", "listed", "palpable content" ],
+    "content": [ "<legend>", "flow content" ]
+  },
+  "form": {
+    "categories": [ "flow content", "palpable content" ],
+    "content": [ "flow content" ],
+    "disallow": [ "<form>" ]
+  },
+  "input": {
+    "categories": [ "flow content", "phrasing content", "form-associated content", "listed", "submittable", "resettable" ],
+    "states": {
+      ":not([type=hidden])": {
+        "categories": [ "labelable", "palpable content" ]
+      }
+    }
+  },
+  "label": {
+    "categories": [ "flow content", "phrasing content", "interactive content", "form-associated content", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "disallow": [ "<label>" ]
+  },
+  "legend": {
+    "content": [ "phrasing content" ],
+    "parent": [ "<fieldset>" ],
+    "position": [ "first" ]
+  },
+  "meter": {
+    "categories": [ "flow content", "phrasing content", "form-associated content", "labelable", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "disallow": [ "<meter>" ],
+    "nospec": [ "4.01" ]
+  },
+  "optgroup": {
+    "content": [ "<option>" ],
+    "parent": [ "<select>" ]
+  },
+  "option": {
+    "content": [ "text" ],
+    "parent": [ "<select>", "<optgroup>", "<datalist>" ]
+  },
+  "output": {
+    "categories": [ "flow content", "phrasing content", "form-associated content", "listed", "labelable", "resettable", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "nospec": [ "4.01" ]
+  },
+  "progress": {
+    "categories": [ "flow content", "phrasing content", "form-associated content", "labelable", "palpable content" ],
+    "content": [ "phrasing content" ],
+    "disallow": [ "<progress>" ],
+    "nospec": [ "4.01" ]
+  },
+  "select": {
+    "categories": [ "flow content", "phrasing content", "interactive content", "form-associated content", "listed", "labelable", "submittable", "resettable" ],
+    "content": [ "<optgroup>", "<option>" ]
+  },
+  "textarea": {
+    "categories": [ "flow content", "phrasing content", "interactive content", "form-associated content", "listed", "labelable", "submittable", "resettable" ],
+    "content": [ "text" ]
+  },
+
+  "details": {
+    "categories": [ "flow content", "sectioning root", "interactive content", "palpable content" ],
+    "content": [ "<summary>", "flow content" ],
+    "nospec": [ "4.01", "5" ],
+    "experimental": true
+  },
+  "dialog": {
+    "categories": [ "flow content", "sectioning root" ],
+    "content": [ "flow content" ],
+    "nospec": [ "4.01", "5" ],
+    "experimental": true
+  },
+   "hgroup": {
+    "categories": [ "flow content", "heading content", "palpable content" ],
+    "content": [ "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>" ],
+    "nospec": [ "4.01", "5" ],
+    "experimental": true
+  },
+  "menu": {
+    "categories": [ "flow content" ],
+    "states": {
+      "[type=list], :not([type])": {
+        "categories": [ "palpable content" ],
+        "content": [ "flow content", "<li>", "<script>", "<template>" ]
+      },
+      "[type=menu]": {
+        "content": [ "<script>", "<template>", "<menu>", "<menuitem>", "<hr>" ]
+      }
+    },
+    "nospec": [ "4.01", "5" ],
+    "experimental": true
+  },
+  "menuitem": {
+    "parent": [ "<menu>" ],
+    "nospec": [ "4.01", "5" ],
+    "experimental": true
+  },
+  "picture": {
+    "categories": [ "flow content", "phrasing content", "embedded content" ],
+    "content": [ "<source>", "<img>" ],
+    "nospec": [ "4.01", "5", "5.1" ],
+    "experimental": true
+  },
+  "shadow": {
+    "content": [ "flow content" ],
+    "nospec": [ "4.01", "5", "5.1", "LS" ],
+    "experimental": true
+  },
+  "summary": {
+    "content": [ "phrasing content", "heading content" ],
+    "parent": [ "<details>" ],
+    "nospec": [ "4.01", "5" ],
+    "experimental": true
+  }
+}
+
+},{}],19:[function(require,module,exports){
+'use strict'
+
+const elementMeta = require( '@mojule/element-meta' )
+const Is = require( '@mojule/is' )
+const camelCase = require( 'lodash.camelcase' )
+
+const meta = elementMeta()
+const tagNames = Object.keys( meta )
+
+const predicates = {
+  stringMap: value => Is.is.object( value ) && Object.keys( value ).every( key =>
+    Is.is.string( value[ key ] )
+  ),
+  attributeMapValue: value => Is.is.string( value ) || Is.is.function( value ),
+  attributeMap: value =>
+    Is.is.object( value ) && Object.keys( value ).every( key => {
+      if( predicates.attributeMapValue( value[ key ] ) ) return true
+
+      if( key === 'data' || key === 'style' ){
+        return predicates.stringMap( value[ key ] )
+      }
+
+      return false
+    }),
+  node: value =>
+    value && Is.is.string( value.nodeName ) && Is.is.integer( value.nodeType )
+}
+
+const is = Is.extendDefaults( predicates )
+
+const handleAttributes = ( document, el, attributes ) => {
+  Object.keys( attributes ).forEach( key => {
+    const value = attributes[ key ]
+
+    if( is.function( value ) ){
+      el.addEventListener( key, value )
+    } else if( key === 'data' && is.stringMap( value ) ) {
+      Object.assign( el.dataset, value )
+    } else if( key === 'style' && is.stringMap( value ) ) {
+      Object.keys( value ).forEach( name => {
+        const key = camelCase( name )
+
+        el.style[ key ] = value[ name ]
+      })
+    } else {
+      el.setAttribute( key, value )
+    }
+  })
+}
+
+const handleArg = ( document, el, arg ) => {
+  if( is.string( arg ) ){
+    const text = document.createTextNode( arg )
+
+    el.appendChild( text )
+  } else if( is.node( arg ) ){
+    el.appendChild( arg )
+  } else if( is.attributeMap( arg ) ) {
+    handleAttributes( document, el, arg )
+  } else {
+    throw Error( 'Unexpected argument' )
+  }
+}
+
+const createEl = ( document, tagName, ...args ) => {
+  const el = document.createElement( tagName )
+
+  args.forEach( arg => {
+    handleArg( document, el, arg )
+  })
+
+  return el
+}
+
+const H = document => {
+  const element = ( tagName, ...args ) => createEl( document, tagName, ...args )
+  const textNode = str => document.createTextNode( str )
+  const comment = str => document.createComment( str )
+  const documentFragment = ( ...childNodes ) => {
+    const fragment = document.createDocumentFragment()
+
+    childNodes.forEach( node => {
+      if( is.node( node ) ){
+        fragment.appendChild( node )
+      } else {
+        fragment.appendChild( document.createTextNode( node ) )
+      }
+    })
+
+    return fragment
+  }
+
+  const h = {
+    element, textNode, comment, documentFragment
+  }
+
+  tagNames.forEach( tagName => {
+    h[ tagName ] = ( ...args ) => element( tagName, ...args )
+  })
+
+  return h
+}
+
+module.exports = H
+
+},{"@mojule/element-meta":17,"@mojule/is":20,"lodash.camelcase":94}],20:[function(require,module,exports){
 "use strict";
 const is_1 = require("./is");
 /*
@@ -1141,7 +2135,7 @@ const utils = Utils(is_1.is);
 const Is = { is: is_1.is, extendDefaults, utils, Utils };
 module.exports = Is;
 
-},{"./is":11}],11:[function(require,module,exports){
+},{"./is":21}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const isEmptyObject = (obj) => {
@@ -1173,7 +2167,7 @@ exports.is = {
     empty: isEmpty
 };
 
-},{}],12:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const is_1 = require("@mojule/is");
@@ -1447,7 +2441,86 @@ exports.oldFromDiff = (diffs) => {
     return pva;
 };
 
-},{"@mojule/is":10,"micromatch":84}],13:[function(require,module,exports){
+},{"@mojule/is":20,"micromatch":98}],23:[function(require,module,exports){
+'use strict'
+
+module.exports = require( './src' )
+
+},{"./src":24}],24:[function(require,module,exports){
+'use strict'
+
+const lodashRange = require( 'lodash.range' )
+
+const clone = ( obj = {} ) => JSON.parse( JSON.stringify( obj ) )
+
+const matches = ( obj = {}, source = {} ) =>
+  Object.keys( source ).every( key => obj[ key ] === source[ key ] )
+
+const id = ( prefix = '', length = 32 ) => {
+  if( prefix )
+    prefix = identifier( prefix ) + '-'
+
+  let str = prefix
+
+  for( let i = 0; i < length; i++ ) {
+    str += Math.floor( Math.random() * 16 ).toString( 16 )
+  }
+
+  return str
+}
+
+const identifier = ( value = '', caseSensitive = false ) => {
+  let id = value.replace( /[^a-z0-9]/gi, '-' ).replace( /-{2,}/g, '-' ).replace( /^-/i, '' ).replace( /-$/i, '' )
+
+  if( !caseSensitive )
+    id = id.toLowerCase()
+
+  return id
+}
+
+const escapeHtml = ( str = '' ) => {
+  const result = str.replace( /</g, '&lt;' )
+  return result
+}
+
+const capitalizeFirstLetter = ( str = '' ) =>
+  str.charAt( 0 ).toUpperCase() + str.slice( 1 )
+
+const hyphenatedToCamelCase = ( str = '', capitalizeFirst = false ) => {
+  let [ head, ...rest ] = str.split( '-' )
+
+  if( capitalizeFirst )
+    head = capitalizeFirstLetter( head )
+
+  const capitalized = rest.map( capitalizeFirstLetter )
+
+  return [ head, ...capitalized ].join( '' )
+}
+
+const camelCaseToHyphenated = ( str = '' ) =>
+  str.replace( /([A-Z])/g, matches => `-${matches[ 0 ].toLowerCase()}` )
+
+
+const range = ( start = 0, end ) => {
+  if( typeof end === 'undefined' ) {
+    return lodashRange( start )
+  }
+  else {
+    const step = start <= end ? 1 : -1
+    const normEnd = end >= 0 ? end + 1 : end - 1
+      return lodashRange( start, normEnd, step )
+  }
+}
+
+
+const utils = {
+  id, identifier, matches, clone, escapeHtml, capitalizeFirstLetter,
+  hyphenatedToCamelCase, camelCaseToHyphenated, range
+}
+
+module.exports = utils
+
+},{"lodash.range":95}],25:[function(require,module,exports){
 /*!
  * arr-diff <https://github.com/jonschlinkert/arr-diff>
  *
@@ -1496,7 +2569,7 @@ function diffArray(one, two) {
   return arr;
 }
 
-},{}],14:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /*!
  * arr-flatten <https://github.com/jonschlinkert/arr-flatten>
  *
@@ -1520,7 +2593,7 @@ function flat(arr, res) {
   return res;
 }
 
-},{}],15:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 module.exports = function union(init) {
@@ -1551,7 +2624,7 @@ module.exports = function union(init) {
   return init;
 };
 
-},{}],16:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * array-unique <https://github.com/jonschlinkert/array-unique>
  *
@@ -1596,7 +2669,7 @@ module.exports.immutable = function uniqueImmutable(arr) {
   return module.exports(newArr);
 };
 
-},{}],17:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /*!
  * assign-symbols <https://github.com/jonschlinkert/assign-symbols>
  *
@@ -1638,7 +2711,7 @@ module.exports = function(receiver, objects) {
   return target;
 };
 
-},{}],18:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 'use strict';
 
 var util = require('util');
@@ -2075,7 +3148,7 @@ module.exports = namespace();
 
 module.exports.namespace = namespace;
 
-},{"cache-base":29,"class-utils":30,"component-emitter":33,"define-property":19,"isobject":80,"mixin-deep":89,"pascalcase":102,"util":6}],19:[function(require,module,exports){
+},{"cache-base":41,"class-utils":42,"component-emitter":45,"define-property":31,"isobject":92,"mixin-deep":103,"pascalcase":116,"util":6}],31:[function(require,module,exports){
 /*!
  * define-property <https://github.com/jonschlinkert/define-property>
  *
@@ -2108,7 +3181,7 @@ module.exports = function defineProperty(obj, prop, val) {
   });
 };
 
-},{"is-descriptor":22}],20:[function(require,module,exports){
+},{"is-descriptor":34}],32:[function(require,module,exports){
 /*!
  * is-accessor-descriptor <https://github.com/jonschlinkert/is-accessor-descriptor>
  *
@@ -2179,7 +3252,7 @@ function has(obj, key) {
 
 module.exports = isAccessorDescriptor;
 
-},{"kind-of":81}],21:[function(require,module,exports){
+},{"kind-of":93}],33:[function(require,module,exports){
 /*!
  * is-data-descriptor <https://github.com/jonschlinkert/is-data-descriptor>
  *
@@ -2230,7 +3303,7 @@ module.exports = function isDataDescriptor(obj, prop) {
   return true;
 };
 
-},{"kind-of":81}],22:[function(require,module,exports){
+},{"kind-of":93}],34:[function(require,module,exports){
 /*!
  * is-descriptor <https://github.com/jonschlinkert/is-descriptor>
  *
@@ -2254,7 +3327,7 @@ module.exports = function isDescriptor(obj, key) {
   return isData(obj, key);
 };
 
-},{"is-accessor-descriptor":20,"is-data-descriptor":21,"kind-of":81}],23:[function(require,module,exports){
+},{"is-accessor-descriptor":32,"is-data-descriptor":33,"kind-of":93}],35:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2574,7 +3647,7 @@ braces.cache = cache;
 
 module.exports = braces;
 
-},{"./lib/braces":24,"./lib/compilers":25,"./lib/parsers":26,"./lib/utils":27,"array-unique":16,"extend-shallow":28,"to-regex":152}],24:[function(require,module,exports){
+},{"./lib/braces":36,"./lib/compilers":37,"./lib/parsers":38,"./lib/utils":39,"array-unique":28,"extend-shallow":40,"to-regex":166}],36:[function(require,module,exports){
 'use strict';
 
 var extend = require('extend-shallow');
@@ -2680,7 +3753,7 @@ Braces.prototype.optimize = function(pattern) {
 
 module.exports = Braces;
 
-},{"./compilers":25,"./parsers":26,"./utils":27,"extend-shallow":28,"snapdragon":123}],25:[function(require,module,exports){
+},{"./compilers":37,"./parsers":38,"./utils":39,"extend-shallow":40,"snapdragon":137}],37:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -2964,7 +4037,7 @@ function hasQueue(node) {
   return Array.isArray(node.queue) && node.queue.length;
 }
 
-},{"./utils":27}],26:[function(require,module,exports){
+},{"./utils":39}],38:[function(require,module,exports){
 'use strict';
 
 var Node = require('snapdragon-node');
@@ -3326,7 +4399,7 @@ function concatNodes(pos, node, parent, options) {
   prev.push(node);
 }
 
-},{"./utils":27,"snapdragon-node":116}],27:[function(require,module,exports){
+},{"./utils":39,"snapdragon-node":130}],39:[function(require,module,exports){
 'use strict';
 
 var splitString = require('split-string');
@@ -3671,7 +4744,7 @@ utils.escapeRegex = function(str) {
   return str.replace(/\\?([!^*?()[\]{}+?/])/g, '\\$1');
 };
 
-},{"arr-flatten":14,"array-unique":16,"extend-shallow":28,"fill-range":59,"isobject":80,"repeat-element":105,"split-string":146}],28:[function(require,module,exports){
+},{"arr-flatten":26,"array-unique":28,"extend-shallow":40,"fill-range":71,"isobject":92,"repeat-element":119,"split-string":160}],40:[function(require,module,exports){
 'use strict';
 
 var isObject = require('is-extendable');
@@ -3706,7 +4779,7 @@ function hasOwn(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
-},{"is-extendable":74}],29:[function(require,module,exports){
+},{"is-extendable":86}],41:[function(require,module,exports){
 'use strict';
 
 var isObject = require('isobject');
@@ -3969,7 +5042,7 @@ module.exports = namespace();
 
 module.exports.namespace = namespace;
 
-},{"collection-visit":32,"component-emitter":33,"get-value":63,"has-value":64,"isobject":80,"set-value":114,"to-object-path":149,"union-value":153,"unset-value":156}],30:[function(require,module,exports){
+},{"collection-visit":44,"component-emitter":45,"get-value":75,"has-value":76,"isobject":92,"set-value":128,"to-object-path":163,"union-value":167,"unset-value":170}],42:[function(require,module,exports){
 'use strict';
 
 var util = require('util');
@@ -4341,7 +5414,7 @@ cu.bubble = function(Parent, events) {
   };
 };
 
-},{"arr-union":15,"define-property":31,"isobject":80,"static-extend":147,"util":6}],31:[function(require,module,exports){
+},{"arr-union":27,"define-property":43,"isobject":92,"static-extend":161,"util":6}],43:[function(require,module,exports){
 /*!
  * define-property <https://github.com/jonschlinkert/define-property>
  *
@@ -4374,7 +5447,7 @@ module.exports = function defineProperty(obj, prop, val) {
   });
 };
 
-},{"is-descriptor":72}],32:[function(require,module,exports){
+},{"is-descriptor":84}],44:[function(require,module,exports){
 /*!
  * collection-visit <https://github.com/jonschlinkert/collection-visit>
  *
@@ -4406,7 +5479,7 @@ module.exports = function(collection, method, val) {
   return collection;
 };
 
-},{"map-visit":83,"object-visit":100}],33:[function(require,module,exports){
+},{"map-visit":97,"object-visit":114}],45:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -4571,7 +5644,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],34:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 /*!
  * copy-descriptor <https://github.com/jonschlinkert/copy-descriptor>
  *
@@ -4654,7 +5727,7 @@ function isObject(val) {
 }
 
 
-},{}],35:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 /*!
  * define-property <https://github.com/jonschlinkert/define-property>
  *
@@ -4694,13 +5767,13 @@ module.exports = function defineProperty(obj, key, val) {
   return obj;
 };
 
-},{"is-descriptor":38,"isobject":80}],36:[function(require,module,exports){
-arguments[4][20][0].apply(exports,arguments)
-},{"dup":20,"kind-of":81}],37:[function(require,module,exports){
-arguments[4][21][0].apply(exports,arguments)
-},{"dup":21,"kind-of":81}],38:[function(require,module,exports){
-arguments[4][22][0].apply(exports,arguments)
-},{"dup":22,"is-accessor-descriptor":36,"is-data-descriptor":37,"kind-of":81}],39:[function(require,module,exports){
+},{"is-descriptor":50,"isobject":92}],48:[function(require,module,exports){
+arguments[4][32][0].apply(exports,arguments)
+},{"dup":32,"kind-of":93}],49:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33,"kind-of":93}],50:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34,"is-accessor-descriptor":48,"is-data-descriptor":49,"kind-of":93}],51:[function(require,module,exports){
 (function (__filename){
 'use strict';
 
@@ -4915,7 +5988,7 @@ brackets.parsers = parsers;
 module.exports = brackets;
 
 }).call(this,"/node_modules\\expand-brackets\\index.js")
-},{"./lib/compilers":40,"./lib/parsers":41,"debug":43,"extend-shallow":46,"snapdragon":123,"to-regex":152}],40:[function(require,module,exports){
+},{"./lib/compilers":52,"./lib/parsers":53,"debug":55,"extend-shallow":58,"snapdragon":137,"to-regex":166}],52:[function(require,module,exports){
 'use strict';
 
 var posix = require('posix-character-classes');
@@ -5004,7 +6077,7 @@ module.exports = function(brackets) {
     });
 };
 
-},{"posix-character-classes":103}],41:[function(require,module,exports){
+},{"posix-character-classes":117}],53:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -5225,7 +6298,7 @@ module.exports = parsers;
 
 module.exports.TEXT_REGEX = TEXT_REGEX;
 
-},{"./utils":42,"define-property":45}],42:[function(require,module,exports){
+},{"./utils":54,"define-property":57}],54:[function(require,module,exports){
 'use strict';
 
 var toRegex = require('to-regex');
@@ -5261,7 +6334,7 @@ exports.createRegex = function(pattern, include) {
   return (cached = re);
 };
 
-},{"regex-not":104,"to-regex":152}],43:[function(require,module,exports){
+},{"regex-not":118,"to-regex":166}],55:[function(require,module,exports){
 (function (process){
 /**
  * This is the web browser implementation of `debug()`.
@@ -5450,7 +6523,7 @@ function localstorage() {
 }
 
 }).call(this,require('_process'))
-},{"./debug":44,"_process":3}],44:[function(require,module,exports){
+},{"./debug":56,"_process":3}],56:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -5654,11 +6727,11 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":91}],45:[function(require,module,exports){
-arguments[4][31][0].apply(exports,arguments)
-},{"dup":31,"is-descriptor":72}],46:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28,"is-extendable":74}],47:[function(require,module,exports){
+},{"ms":105}],57:[function(require,module,exports){
+arguments[4][43][0].apply(exports,arguments)
+},{"dup":43,"is-descriptor":84}],58:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"dup":40,"is-extendable":86}],59:[function(require,module,exports){
 'use strict';
 
 var isExtendable = require('is-extendable');
@@ -5720,7 +6793,7 @@ function isEnum(obj, key) {
   return Object.prototype.propertyIsEnumerable.call(obj, key);
 }
 
-},{"assign-symbols":17,"is-extendable":48}],48:[function(require,module,exports){
+},{"assign-symbols":29,"is-extendable":60}],60:[function(require,module,exports){
 /*!
  * is-extendable <https://github.com/jonschlinkert/is-extendable>
  *
@@ -5736,7 +6809,7 @@ module.exports = function isExtendable(val) {
   return isPlainObject(val) || typeof val === 'function' || Array.isArray(val);
 };
 
-},{"is-plain-object":77}],49:[function(require,module,exports){
+},{"is-plain-object":89}],61:[function(require,module,exports){
 'use strict';
 
 /**
@@ -6069,7 +7142,7 @@ extglob.parsers = parsers;
 
 module.exports = extglob;
 
-},{"./lib/compilers":50,"./lib/extglob":51,"./lib/parsers":52,"./lib/utils":53,"array-unique":16,"extend-shallow":55,"to-regex":152}],50:[function(require,module,exports){
+},{"./lib/compilers":62,"./lib/extglob":63,"./lib/parsers":64,"./lib/utils":65,"array-unique":28,"extend-shallow":67,"to-regex":166}],62:[function(require,module,exports){
 'use strict';
 
 var brackets = require('expand-brackets');
@@ -6240,7 +7313,7 @@ module.exports = function(extglob) {
     });
 };
 
-},{"expand-brackets":39}],51:[function(require,module,exports){
+},{"expand-brackets":51}],63:[function(require,module,exports){
 'use strict';
 
 /**
@@ -6320,7 +7393,7 @@ function Extglob(options) {
 
 module.exports = Extglob;
 
-},{"./compilers":50,"./parsers":52,"define-property":54,"extend-shallow":55,"snapdragon":123}],52:[function(require,module,exports){
+},{"./compilers":62,"./parsers":64,"define-property":66,"extend-shallow":67,"snapdragon":137}],64:[function(require,module,exports){
 'use strict';
 
 var brackets = require('expand-brackets');
@@ -6478,7 +7551,7 @@ module.exports.TEXT_REGEX = TEXT_REGEX;
 
 module.exports = parsers;
 
-},{"./utils":53,"define-property":54,"expand-brackets":39}],53:[function(require,module,exports){
+},{"./utils":65,"define-property":66,"expand-brackets":51}],65:[function(require,module,exports){
 'use strict';
 
 var regex = require('regex-not');
@@ -6549,17 +7622,17 @@ utils.createRegex = function(str) {
   return regex(str, opts);
 };
 
-},{"fragment-cache":62,"regex-not":104}],54:[function(require,module,exports){
-arguments[4][19][0].apply(exports,arguments)
-},{"dup":19,"is-descriptor":58}],55:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28,"is-extendable":74}],56:[function(require,module,exports){
-arguments[4][20][0].apply(exports,arguments)
-},{"dup":20,"kind-of":81}],57:[function(require,module,exports){
-arguments[4][21][0].apply(exports,arguments)
-},{"dup":21,"kind-of":81}],58:[function(require,module,exports){
-arguments[4][22][0].apply(exports,arguments)
-},{"dup":22,"is-accessor-descriptor":56,"is-data-descriptor":57,"kind-of":81}],59:[function(require,module,exports){
+},{"fragment-cache":74,"regex-not":118}],66:[function(require,module,exports){
+arguments[4][31][0].apply(exports,arguments)
+},{"dup":31,"is-descriptor":70}],67:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"dup":40,"is-extendable":86}],68:[function(require,module,exports){
+arguments[4][32][0].apply(exports,arguments)
+},{"dup":32,"kind-of":93}],69:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33,"kind-of":93}],70:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34,"is-accessor-descriptor":68,"is-data-descriptor":69,"kind-of":93}],71:[function(require,module,exports){
 /*!
  * fill-range <https://github.com/jonschlinkert/fill-range>
  *
@@ -6769,9 +7842,9 @@ function isValidNumber(n) {
 
 module.exports = fillRange;
 
-},{"extend-shallow":60,"is-number":75,"repeat-string":106,"to-regex-range":151,"util":6}],60:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28,"is-extendable":74}],61:[function(require,module,exports){
+},{"extend-shallow":72,"is-number":87,"repeat-string":120,"to-regex-range":165,"util":6}],72:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"dup":40,"is-extendable":86}],73:[function(require,module,exports){
 /*!
  * for-in <https://github.com/jonschlinkert/for-in>
  *
@@ -6789,7 +7862,7 @@ module.exports = function forIn(obj, fn, thisArg) {
   }
 };
 
-},{}],62:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 /*!
  * fragment-cache <https://github.com/jonschlinkert/fragment-cache>
  *
@@ -6919,7 +7992,7 @@ FragmentCache.prototype = {
 
 exports = module.exports = FragmentCache;
 
-},{"map-cache":82}],63:[function(require,module,exports){
+},{"map-cache":96}],75:[function(require,module,exports){
 /*!
  * get-value <https://github.com/jonschlinkert/get-value>
  *
@@ -6971,7 +8044,7 @@ function toString(val) {
   return val;
 }
 
-},{}],64:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 /*!
  * has-value <https://github.com/jonschlinkert/has-value>
  *
@@ -6989,7 +8062,7 @@ module.exports = function(val, prop) {
   return hasValues(isObject(val) && prop ? get(val, prop) : val);
 };
 
-},{"get-value":63,"has-values":65,"isobject":80}],65:[function(require,module,exports){
+},{"get-value":75,"has-values":77,"isobject":92}],77:[function(require,module,exports){
 /*!
  * has-values <https://github.com/jonschlinkert/has-values>
  *
@@ -7051,7 +8124,7 @@ module.exports = function hasValue(val) {
   }
 };
 
-},{"is-number":75,"kind-of":66}],66:[function(require,module,exports){
+},{"is-number":87,"kind-of":78}],78:[function(require,module,exports){
 var isBuffer = require('is-buffer');
 var toString = Object.prototype.toString;
 
@@ -7172,7 +8245,7 @@ module.exports = function kindOf(val) {
   return 'object';
 };
 
-},{"is-buffer":69}],67:[function(require,module,exports){
+},{"is-buffer":81}],79:[function(require,module,exports){
 /*!
  * is-accessor-descriptor <https://github.com/jonschlinkert/is-accessor-descriptor>
  *
@@ -7243,7 +8316,7 @@ function has(obj, key) {
 
 module.exports = isAccessorDescriptor;
 
-},{"kind-of":68}],68:[function(require,module,exports){
+},{"kind-of":80}],80:[function(require,module,exports){
 var isBuffer = require('is-buffer');
 var toString = Object.prototype.toString;
 
@@ -7361,7 +8434,7 @@ module.exports = function kindOf(val) {
   return 'object';
 };
 
-},{"is-buffer":69}],69:[function(require,module,exports){
+},{"is-buffer":81}],81:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -7384,7 +8457,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],70:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 /*!
  * is-data-descriptor <https://github.com/jonschlinkert/is-data-descriptor>
  *
@@ -7441,11 +8514,11 @@ function isDataDescriptor(obj, prop) {
 
 module.exports = isDataDescriptor;
 
-},{"kind-of":71}],71:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68,"is-buffer":69}],72:[function(require,module,exports){
-arguments[4][22][0].apply(exports,arguments)
-},{"dup":22,"is-accessor-descriptor":67,"is-data-descriptor":70,"kind-of":73}],73:[function(require,module,exports){
+},{"kind-of":83}],83:[function(require,module,exports){
+arguments[4][80][0].apply(exports,arguments)
+},{"dup":80,"is-buffer":81}],84:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34,"is-accessor-descriptor":79,"is-data-descriptor":82,"kind-of":85}],85:[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 /**
@@ -7594,7 +8667,7 @@ function isBuffer(val) {
     && val.constructor.isBuffer(val);
 }
 
-},{}],74:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 /*!
  * is-extendable <https://github.com/jonschlinkert/is-extendable>
  *
@@ -7609,7 +8682,7 @@ module.exports = function isExtendable(val) {
     && (typeof val === 'object' || typeof val === 'function');
 };
 
-},{}],75:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 /*!
  * is-number <https://github.com/jonschlinkert/is-number>
  *
@@ -7633,9 +8706,9 @@ module.exports = function isNumber(num) {
   return (num - num + 1) >= 0;
 };
 
-},{"kind-of":76}],76:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68,"is-buffer":69}],77:[function(require,module,exports){
+},{"kind-of":88}],88:[function(require,module,exports){
+arguments[4][80][0].apply(exports,arguments)
+},{"dup":80,"is-buffer":81}],89:[function(require,module,exports){
 /*!
  * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
  *
@@ -7674,7 +8747,7 @@ module.exports = function isPlainObject(o) {
   return true;
 };
 
-},{"isobject":80}],78:[function(require,module,exports){
+},{"isobject":92}],90:[function(require,module,exports){
 (function (process,global){
 /*!
  * is-windows <https://github.com/jonschlinkert/is-windows>
@@ -7705,14 +8778,14 @@ module.exports = function isPlainObject(o) {
 });
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":3}],79:[function(require,module,exports){
+},{"_process":3}],91:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],80:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 /*!
  * isobject <https://github.com/jonschlinkert/isobject>
  *
@@ -7726,7 +8799,7 @@ module.exports = function isObject(val) {
   return val != null && typeof val === 'object' && Array.isArray(val) === false;
 };
 
-},{}],81:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 module.exports = function kindOf(val) {
@@ -7857,7 +8930,1074 @@ function isBuffer(val) {
   return false;
 }
 
-},{}],82:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
+(function (global){
+/**
+ * lodash (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+ * Released under MIT license <https://lodash.com/license>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ */
+
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0;
+
+/** `Object#toString` result references. */
+var symbolTag = '[object Symbol]';
+
+/** Used to match words composed of alphanumeric characters. */
+var reAsciiWord = /[^\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g;
+
+/** Used to match Latin Unicode letters (excluding mathematical operators). */
+var reLatin = /[\xc0-\xd6\xd8-\xf6\xf8-\xff\u0100-\u017f]/g;
+
+/** Used to compose unicode character classes. */
+var rsAstralRange = '\\ud800-\\udfff',
+    rsComboMarksRange = '\\u0300-\\u036f\\ufe20-\\ufe23',
+    rsComboSymbolsRange = '\\u20d0-\\u20f0',
+    rsDingbatRange = '\\u2700-\\u27bf',
+    rsLowerRange = 'a-z\\xdf-\\xf6\\xf8-\\xff',
+    rsMathOpRange = '\\xac\\xb1\\xd7\\xf7',
+    rsNonCharRange = '\\x00-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\xbf',
+    rsPunctuationRange = '\\u2000-\\u206f',
+    rsSpaceRange = ' \\t\\x0b\\f\\xa0\\ufeff\\n\\r\\u2028\\u2029\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u202f\\u205f\\u3000',
+    rsUpperRange = 'A-Z\\xc0-\\xd6\\xd8-\\xde',
+    rsVarRange = '\\ufe0e\\ufe0f',
+    rsBreakRange = rsMathOpRange + rsNonCharRange + rsPunctuationRange + rsSpaceRange;
+
+/** Used to compose unicode capture groups. */
+var rsApos = "['\u2019]",
+    rsAstral = '[' + rsAstralRange + ']',
+    rsBreak = '[' + rsBreakRange + ']',
+    rsCombo = '[' + rsComboMarksRange + rsComboSymbolsRange + ']',
+    rsDigits = '\\d+',
+    rsDingbat = '[' + rsDingbatRange + ']',
+    rsLower = '[' + rsLowerRange + ']',
+    rsMisc = '[^' + rsAstralRange + rsBreakRange + rsDigits + rsDingbatRange + rsLowerRange + rsUpperRange + ']',
+    rsFitz = '\\ud83c[\\udffb-\\udfff]',
+    rsModifier = '(?:' + rsCombo + '|' + rsFitz + ')',
+    rsNonAstral = '[^' + rsAstralRange + ']',
+    rsRegional = '(?:\\ud83c[\\udde6-\\uddff]){2}',
+    rsSurrPair = '[\\ud800-\\udbff][\\udc00-\\udfff]',
+    rsUpper = '[' + rsUpperRange + ']',
+    rsZWJ = '\\u200d';
+
+/** Used to compose unicode regexes. */
+var rsLowerMisc = '(?:' + rsLower + '|' + rsMisc + ')',
+    rsUpperMisc = '(?:' + rsUpper + '|' + rsMisc + ')',
+    rsOptLowerContr = '(?:' + rsApos + '(?:d|ll|m|re|s|t|ve))?',
+    rsOptUpperContr = '(?:' + rsApos + '(?:D|LL|M|RE|S|T|VE))?',
+    reOptMod = rsModifier + '?',
+    rsOptVar = '[' + rsVarRange + ']?',
+    rsOptJoin = '(?:' + rsZWJ + '(?:' + [rsNonAstral, rsRegional, rsSurrPair].join('|') + ')' + rsOptVar + reOptMod + ')*',
+    rsSeq = rsOptVar + reOptMod + rsOptJoin,
+    rsEmoji = '(?:' + [rsDingbat, rsRegional, rsSurrPair].join('|') + ')' + rsSeq,
+    rsSymbol = '(?:' + [rsNonAstral + rsCombo + '?', rsCombo, rsRegional, rsSurrPair, rsAstral].join('|') + ')';
+
+/** Used to match apostrophes. */
+var reApos = RegExp(rsApos, 'g');
+
+/**
+ * Used to match [combining diacritical marks](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks) and
+ * [combining diacritical marks for symbols](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks_for_Symbols).
+ */
+var reComboMark = RegExp(rsCombo, 'g');
+
+/** Used to match [string symbols](https://mathiasbynens.be/notes/javascript-unicode). */
+var reUnicode = RegExp(rsFitz + '(?=' + rsFitz + ')|' + rsSymbol + rsSeq, 'g');
+
+/** Used to match complex or compound words. */
+var reUnicodeWord = RegExp([
+  rsUpper + '?' + rsLower + '+' + rsOptLowerContr + '(?=' + [rsBreak, rsUpper, '$'].join('|') + ')',
+  rsUpperMisc + '+' + rsOptUpperContr + '(?=' + [rsBreak, rsUpper + rsLowerMisc, '$'].join('|') + ')',
+  rsUpper + '?' + rsLowerMisc + '+' + rsOptLowerContr,
+  rsUpper + '+' + rsOptUpperContr,
+  rsDigits,
+  rsEmoji
+].join('|'), 'g');
+
+/** Used to detect strings with [zero-width joiners or code points from the astral planes](http://eev.ee/blog/2015/09/12/dark-corners-of-unicode/). */
+var reHasUnicode = RegExp('[' + rsZWJ + rsAstralRange  + rsComboMarksRange + rsComboSymbolsRange + rsVarRange + ']');
+
+/** Used to detect strings that need a more robust regexp to match words. */
+var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2,}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
+
+/** Used to map Latin Unicode letters to basic Latin letters. */
+var deburredLetters = {
+  // Latin-1 Supplement block.
+  '\xc0': 'A',  '\xc1': 'A', '\xc2': 'A', '\xc3': 'A', '\xc4': 'A', '\xc5': 'A',
+  '\xe0': 'a',  '\xe1': 'a', '\xe2': 'a', '\xe3': 'a', '\xe4': 'a', '\xe5': 'a',
+  '\xc7': 'C',  '\xe7': 'c',
+  '\xd0': 'D',  '\xf0': 'd',
+  '\xc8': 'E',  '\xc9': 'E', '\xca': 'E', '\xcb': 'E',
+  '\xe8': 'e',  '\xe9': 'e', '\xea': 'e', '\xeb': 'e',
+  '\xcc': 'I',  '\xcd': 'I', '\xce': 'I', '\xcf': 'I',
+  '\xec': 'i',  '\xed': 'i', '\xee': 'i', '\xef': 'i',
+  '\xd1': 'N',  '\xf1': 'n',
+  '\xd2': 'O',  '\xd3': 'O', '\xd4': 'O', '\xd5': 'O', '\xd6': 'O', '\xd8': 'O',
+  '\xf2': 'o',  '\xf3': 'o', '\xf4': 'o', '\xf5': 'o', '\xf6': 'o', '\xf8': 'o',
+  '\xd9': 'U',  '\xda': 'U', '\xdb': 'U', '\xdc': 'U',
+  '\xf9': 'u',  '\xfa': 'u', '\xfb': 'u', '\xfc': 'u',
+  '\xdd': 'Y',  '\xfd': 'y', '\xff': 'y',
+  '\xc6': 'Ae', '\xe6': 'ae',
+  '\xde': 'Th', '\xfe': 'th',
+  '\xdf': 'ss',
+  // Latin Extended-A block.
+  '\u0100': 'A',  '\u0102': 'A', '\u0104': 'A',
+  '\u0101': 'a',  '\u0103': 'a', '\u0105': 'a',
+  '\u0106': 'C',  '\u0108': 'C', '\u010a': 'C', '\u010c': 'C',
+  '\u0107': 'c',  '\u0109': 'c', '\u010b': 'c', '\u010d': 'c',
+  '\u010e': 'D',  '\u0110': 'D', '\u010f': 'd', '\u0111': 'd',
+  '\u0112': 'E',  '\u0114': 'E', '\u0116': 'E', '\u0118': 'E', '\u011a': 'E',
+  '\u0113': 'e',  '\u0115': 'e', '\u0117': 'e', '\u0119': 'e', '\u011b': 'e',
+  '\u011c': 'G',  '\u011e': 'G', '\u0120': 'G', '\u0122': 'G',
+  '\u011d': 'g',  '\u011f': 'g', '\u0121': 'g', '\u0123': 'g',
+  '\u0124': 'H',  '\u0126': 'H', '\u0125': 'h', '\u0127': 'h',
+  '\u0128': 'I',  '\u012a': 'I', '\u012c': 'I', '\u012e': 'I', '\u0130': 'I',
+  '\u0129': 'i',  '\u012b': 'i', '\u012d': 'i', '\u012f': 'i', '\u0131': 'i',
+  '\u0134': 'J',  '\u0135': 'j',
+  '\u0136': 'K',  '\u0137': 'k', '\u0138': 'k',
+  '\u0139': 'L',  '\u013b': 'L', '\u013d': 'L', '\u013f': 'L', '\u0141': 'L',
+  '\u013a': 'l',  '\u013c': 'l', '\u013e': 'l', '\u0140': 'l', '\u0142': 'l',
+  '\u0143': 'N',  '\u0145': 'N', '\u0147': 'N', '\u014a': 'N',
+  '\u0144': 'n',  '\u0146': 'n', '\u0148': 'n', '\u014b': 'n',
+  '\u014c': 'O',  '\u014e': 'O', '\u0150': 'O',
+  '\u014d': 'o',  '\u014f': 'o', '\u0151': 'o',
+  '\u0154': 'R',  '\u0156': 'R', '\u0158': 'R',
+  '\u0155': 'r',  '\u0157': 'r', '\u0159': 'r',
+  '\u015a': 'S',  '\u015c': 'S', '\u015e': 'S', '\u0160': 'S',
+  '\u015b': 's',  '\u015d': 's', '\u015f': 's', '\u0161': 's',
+  '\u0162': 'T',  '\u0164': 'T', '\u0166': 'T',
+  '\u0163': 't',  '\u0165': 't', '\u0167': 't',
+  '\u0168': 'U',  '\u016a': 'U', '\u016c': 'U', '\u016e': 'U', '\u0170': 'U', '\u0172': 'U',
+  '\u0169': 'u',  '\u016b': 'u', '\u016d': 'u', '\u016f': 'u', '\u0171': 'u', '\u0173': 'u',
+  '\u0174': 'W',  '\u0175': 'w',
+  '\u0176': 'Y',  '\u0177': 'y', '\u0178': 'Y',
+  '\u0179': 'Z',  '\u017b': 'Z', '\u017d': 'Z',
+  '\u017a': 'z',  '\u017c': 'z', '\u017e': 'z',
+  '\u0132': 'IJ', '\u0133': 'ij',
+  '\u0152': 'Oe', '\u0153': 'oe',
+  '\u0149': "'n", '\u017f': 'ss'
+};
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
+
+/**
+ * A specialized version of `_.reduce` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {*} [accumulator] The initial value.
+ * @param {boolean} [initAccum] Specify using the first element of `array` as
+ *  the initial value.
+ * @returns {*} Returns the accumulated value.
+ */
+function arrayReduce(array, iteratee, accumulator, initAccum) {
+  var index = -1,
+      length = array ? array.length : 0;
+
+  if (initAccum && length) {
+    accumulator = array[++index];
+  }
+  while (++index < length) {
+    accumulator = iteratee(accumulator, array[index], index, array);
+  }
+  return accumulator;
+}
+
+/**
+ * Converts an ASCII `string` to an array.
+ *
+ * @private
+ * @param {string} string The string to convert.
+ * @returns {Array} Returns the converted array.
+ */
+function asciiToArray(string) {
+  return string.split('');
+}
+
+/**
+ * Splits an ASCII `string` into an array of its words.
+ *
+ * @private
+ * @param {string} The string to inspect.
+ * @returns {Array} Returns the words of `string`.
+ */
+function asciiWords(string) {
+  return string.match(reAsciiWord) || [];
+}
+
+/**
+ * The base implementation of `_.propertyOf` without support for deep paths.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {Function} Returns the new accessor function.
+ */
+function basePropertyOf(object) {
+  return function(key) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Used by `_.deburr` to convert Latin-1 Supplement and Latin Extended-A
+ * letters to basic Latin letters.
+ *
+ * @private
+ * @param {string} letter The matched letter to deburr.
+ * @returns {string} Returns the deburred letter.
+ */
+var deburrLetter = basePropertyOf(deburredLetters);
+
+/**
+ * Checks if `string` contains Unicode symbols.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {boolean} Returns `true` if a symbol is found, else `false`.
+ */
+function hasUnicode(string) {
+  return reHasUnicode.test(string);
+}
+
+/**
+ * Checks if `string` contains a word composed of Unicode symbols.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {boolean} Returns `true` if a word is found, else `false`.
+ */
+function hasUnicodeWord(string) {
+  return reHasUnicodeWord.test(string);
+}
+
+/**
+ * Converts `string` to an array.
+ *
+ * @private
+ * @param {string} string The string to convert.
+ * @returns {Array} Returns the converted array.
+ */
+function stringToArray(string) {
+  return hasUnicode(string)
+    ? unicodeToArray(string)
+    : asciiToArray(string);
+}
+
+/**
+ * Converts a Unicode `string` to an array.
+ *
+ * @private
+ * @param {string} string The string to convert.
+ * @returns {Array} Returns the converted array.
+ */
+function unicodeToArray(string) {
+  return string.match(reUnicode) || [];
+}
+
+/**
+ * Splits a Unicode `string` into an array of its words.
+ *
+ * @private
+ * @param {string} The string to inspect.
+ * @returns {Array} Returns the words of `string`.
+ */
+function unicodeWords(string) {
+  return string.match(reUnicodeWord) || [];
+}
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/** Built-in value references. */
+var Symbol = root.Symbol;
+
+/** Used to convert symbols to primitives and strings. */
+var symbolProto = Symbol ? Symbol.prototype : undefined,
+    symbolToString = symbolProto ? symbolProto.toString : undefined;
+
+/**
+ * The base implementation of `_.slice` without an iteratee call guard.
+ *
+ * @private
+ * @param {Array} array The array to slice.
+ * @param {number} [start=0] The start position.
+ * @param {number} [end=array.length] The end position.
+ * @returns {Array} Returns the slice of `array`.
+ */
+function baseSlice(array, start, end) {
+  var index = -1,
+      length = array.length;
+
+  if (start < 0) {
+    start = -start > length ? 0 : (length + start);
+  }
+  end = end > length ? length : end;
+  if (end < 0) {
+    end += length;
+  }
+  length = start > end ? 0 : ((end - start) >>> 0);
+  start >>>= 0;
+
+  var result = Array(length);
+  while (++index < length) {
+    result[index] = array[index + start];
+  }
+  return result;
+}
+
+/**
+ * The base implementation of `_.toString` which doesn't convert nullish
+ * values to empty strings.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {string} Returns the string.
+ */
+function baseToString(value) {
+  // Exit early for strings to avoid a performance hit in some environments.
+  if (typeof value == 'string') {
+    return value;
+  }
+  if (isSymbol(value)) {
+    return symbolToString ? symbolToString.call(value) : '';
+  }
+  var result = (value + '');
+  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+}
+
+/**
+ * Casts `array` to a slice if it's needed.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {number} start The start position.
+ * @param {number} [end=array.length] The end position.
+ * @returns {Array} Returns the cast slice.
+ */
+function castSlice(array, start, end) {
+  var length = array.length;
+  end = end === undefined ? length : end;
+  return (!start && end >= length) ? array : baseSlice(array, start, end);
+}
+
+/**
+ * Creates a function like `_.lowerFirst`.
+ *
+ * @private
+ * @param {string} methodName The name of the `String` case method to use.
+ * @returns {Function} Returns the new case function.
+ */
+function createCaseFirst(methodName) {
+  return function(string) {
+    string = toString(string);
+
+    var strSymbols = hasUnicode(string)
+      ? stringToArray(string)
+      : undefined;
+
+    var chr = strSymbols
+      ? strSymbols[0]
+      : string.charAt(0);
+
+    var trailing = strSymbols
+      ? castSlice(strSymbols, 1).join('')
+      : string.slice(1);
+
+    return chr[methodName]() + trailing;
+  };
+}
+
+/**
+ * Creates a function like `_.camelCase`.
+ *
+ * @private
+ * @param {Function} callback The function to combine each word.
+ * @returns {Function} Returns the new compounder function.
+ */
+function createCompounder(callback) {
+  return function(string) {
+    return arrayReduce(words(deburr(string).replace(reApos, '')), callback, '');
+  };
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/**
+ * Checks if `value` is classified as a `Symbol` primitive or object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+ * @example
+ *
+ * _.isSymbol(Symbol.iterator);
+ * // => true
+ *
+ * _.isSymbol('abc');
+ * // => false
+ */
+function isSymbol(value) {
+  return typeof value == 'symbol' ||
+    (isObjectLike(value) && objectToString.call(value) == symbolTag);
+}
+
+/**
+ * Converts `value` to a string. An empty string is returned for `null`
+ * and `undefined` values. The sign of `-0` is preserved.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to process.
+ * @returns {string} Returns the string.
+ * @example
+ *
+ * _.toString(null);
+ * // => ''
+ *
+ * _.toString(-0);
+ * // => '-0'
+ *
+ * _.toString([1, 2, 3]);
+ * // => '1,2,3'
+ */
+function toString(value) {
+  return value == null ? '' : baseToString(value);
+}
+
+/**
+ * Converts `string` to [camel case](https://en.wikipedia.org/wiki/CamelCase).
+ *
+ * @static
+ * @memberOf _
+ * @since 3.0.0
+ * @category String
+ * @param {string} [string=''] The string to convert.
+ * @returns {string} Returns the camel cased string.
+ * @example
+ *
+ * _.camelCase('Foo Bar');
+ * // => 'fooBar'
+ *
+ * _.camelCase('--foo-bar--');
+ * // => 'fooBar'
+ *
+ * _.camelCase('__FOO_BAR__');
+ * // => 'fooBar'
+ */
+var camelCase = createCompounder(function(result, word, index) {
+  word = word.toLowerCase();
+  return result + (index ? capitalize(word) : word);
+});
+
+/**
+ * Converts the first character of `string` to upper case and the remaining
+ * to lower case.
+ *
+ * @static
+ * @memberOf _
+ * @since 3.0.0
+ * @category String
+ * @param {string} [string=''] The string to capitalize.
+ * @returns {string} Returns the capitalized string.
+ * @example
+ *
+ * _.capitalize('FRED');
+ * // => 'Fred'
+ */
+function capitalize(string) {
+  return upperFirst(toString(string).toLowerCase());
+}
+
+/**
+ * Deburrs `string` by converting
+ * [Latin-1 Supplement](https://en.wikipedia.org/wiki/Latin-1_Supplement_(Unicode_block)#Character_table)
+ * and [Latin Extended-A](https://en.wikipedia.org/wiki/Latin_Extended-A)
+ * letters to basic Latin letters and removing
+ * [combining diacritical marks](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks).
+ *
+ * @static
+ * @memberOf _
+ * @since 3.0.0
+ * @category String
+ * @param {string} [string=''] The string to deburr.
+ * @returns {string} Returns the deburred string.
+ * @example
+ *
+ * _.deburr('déjà vu');
+ * // => 'deja vu'
+ */
+function deburr(string) {
+  string = toString(string);
+  return string && string.replace(reLatin, deburrLetter).replace(reComboMark, '');
+}
+
+/**
+ * Converts the first character of `string` to upper case.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category String
+ * @param {string} [string=''] The string to convert.
+ * @returns {string} Returns the converted string.
+ * @example
+ *
+ * _.upperFirst('fred');
+ * // => 'Fred'
+ *
+ * _.upperFirst('FRED');
+ * // => 'FRED'
+ */
+var upperFirst = createCaseFirst('toUpperCase');
+
+/**
+ * Splits `string` into an array of its words.
+ *
+ * @static
+ * @memberOf _
+ * @since 3.0.0
+ * @category String
+ * @param {string} [string=''] The string to inspect.
+ * @param {RegExp|string} [pattern] The pattern to match words.
+ * @param- {Object} [guard] Enables use as an iteratee for methods like `_.map`.
+ * @returns {Array} Returns the words of `string`.
+ * @example
+ *
+ * _.words('fred, barney, & pebbles');
+ * // => ['fred', 'barney', 'pebbles']
+ *
+ * _.words('fred, barney, & pebbles', /[^, ]+/g);
+ * // => ['fred', 'barney', '&', 'pebbles']
+ */
+function words(string, pattern, guard) {
+  string = toString(string);
+  pattern = guard ? undefined : pattern;
+
+  if (pattern === undefined) {
+    return hasUnicodeWord(string) ? unicodeWords(string) : asciiWords(string);
+  }
+  return string.match(pattern) || [];
+}
+
+module.exports = camelCase;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],95:[function(require,module,exports){
+/**
+ * lodash (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+ * Released under MIT license <https://lodash.com/license>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ */
+
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0,
+    MAX_SAFE_INTEGER = 9007199254740991,
+    MAX_INTEGER = 1.7976931348623157e+308,
+    NAN = 0 / 0;
+
+/** `Object#toString` result references. */
+var funcTag = '[object Function]',
+    genTag = '[object GeneratorFunction]',
+    symbolTag = '[object Symbol]';
+
+/** Used to match leading and trailing whitespace. */
+var reTrim = /^\s+|\s+$/g;
+
+/** Used to detect bad signed hexadecimal string values. */
+var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+
+/** Used to detect binary string values. */
+var reIsBinary = /^0b[01]+$/i;
+
+/** Used to detect octal string values. */
+var reIsOctal = /^0o[0-7]+$/i;
+
+/** Used to detect unsigned integer values. */
+var reIsUint = /^(?:0|[1-9]\d*)$/;
+
+/** Built-in method references without a dependency on `root`. */
+var freeParseInt = parseInt;
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto.toString;
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeCeil = Math.ceil,
+    nativeMax = Math.max;
+
+/**
+ * The base implementation of `_.range` and `_.rangeRight` which doesn't
+ * coerce arguments.
+ *
+ * @private
+ * @param {number} start The start of the range.
+ * @param {number} end The end of the range.
+ * @param {number} step The value to increment or decrement by.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Array} Returns the range of numbers.
+ */
+function baseRange(start, end, step, fromRight) {
+  var index = -1,
+      length = nativeMax(nativeCeil((end - start) / (step || 1)), 0),
+      result = Array(length);
+
+  while (length--) {
+    result[fromRight ? length : ++index] = start;
+    start += step;
+  }
+  return result;
+}
+
+/**
+ * Creates a `_.range` or `_.rangeRight` function.
+ *
+ * @private
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new range function.
+ */
+function createRange(fromRight) {
+  return function(start, end, step) {
+    if (step && typeof step != 'number' && isIterateeCall(start, end, step)) {
+      end = step = undefined;
+    }
+    // Ensure the sign of `-0` is preserved.
+    start = toFinite(start);
+    if (end === undefined) {
+      end = start;
+      start = 0;
+    } else {
+      end = toFinite(end);
+    }
+    step = step === undefined ? (start < end ? 1 : -1) : toFinite(step);
+    return baseRange(start, end, step, fromRight);
+  };
+}
+
+/**
+ * Checks if `value` is a valid array-like index.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
+ * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
+ */
+function isIndex(value, length) {
+  length = length == null ? MAX_SAFE_INTEGER : length;
+  return !!length &&
+    (typeof value == 'number' || reIsUint.test(value)) &&
+    (value > -1 && value % 1 == 0 && value < length);
+}
+
+/**
+ * Checks if the given arguments are from an iteratee call.
+ *
+ * @private
+ * @param {*} value The potential iteratee value argument.
+ * @param {*} index The potential iteratee index or key argument.
+ * @param {*} object The potential iteratee object argument.
+ * @returns {boolean} Returns `true` if the arguments are from an iteratee call,
+ *  else `false`.
+ */
+function isIterateeCall(value, index, object) {
+  if (!isObject(object)) {
+    return false;
+  }
+  var type = typeof index;
+  if (type == 'number'
+        ? (isArrayLike(object) && isIndex(index, object.length))
+        : (type == 'string' && index in object)
+      ) {
+    return eq(object[index], value);
+  }
+  return false;
+}
+
+/**
+ * Performs a
+ * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+ * comparison between two values to determine if they are equivalent.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to compare.
+ * @param {*} other The other value to compare.
+ * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
+ * @example
+ *
+ * var object = { 'a': 1 };
+ * var other = { 'a': 1 };
+ *
+ * _.eq(object, object);
+ * // => true
+ *
+ * _.eq(object, other);
+ * // => false
+ *
+ * _.eq('a', 'a');
+ * // => true
+ *
+ * _.eq('a', Object('a'));
+ * // => false
+ *
+ * _.eq(NaN, NaN);
+ * // => true
+ */
+function eq(value, other) {
+  return value === other || (value !== value && other !== other);
+}
+
+/**
+ * Checks if `value` is array-like. A value is considered array-like if it's
+ * not a function and has a `value.length` that's an integer greater than or
+ * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ * @example
+ *
+ * _.isArrayLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLike(document.body.children);
+ * // => true
+ *
+ * _.isArrayLike('abc');
+ * // => true
+ *
+ * _.isArrayLike(_.noop);
+ * // => false
+ */
+function isArrayLike(value) {
+  return value != null && isLength(value.length) && !isFunction(value);
+}
+
+/**
+ * Checks if `value` is classified as a `Function` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a function, else `false`.
+ * @example
+ *
+ * _.isFunction(_);
+ * // => true
+ *
+ * _.isFunction(/abc/);
+ * // => false
+ */
+function isFunction(value) {
+  // The use of `Object#toString` avoids issues with the `typeof` operator
+  // in Safari 8-9 which returns 'object' for typed array and other constructors.
+  var tag = isObject(value) ? objectToString.call(value) : '';
+  return tag == funcTag || tag == genTag;
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This method is loosely based on
+ * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ * @example
+ *
+ * _.isLength(3);
+ * // => true
+ *
+ * _.isLength(Number.MIN_VALUE);
+ * // => false
+ *
+ * _.isLength(Infinity);
+ * // => false
+ *
+ * _.isLength('3');
+ * // => false
+ */
+function isLength(value) {
+  return typeof value == 'number' &&
+    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  var type = typeof value;
+  return !!value && (type == 'object' || type == 'function');
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/**
+ * Checks if `value` is classified as a `Symbol` primitive or object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+ * @example
+ *
+ * _.isSymbol(Symbol.iterator);
+ * // => true
+ *
+ * _.isSymbol('abc');
+ * // => false
+ */
+function isSymbol(value) {
+  return typeof value == 'symbol' ||
+    (isObjectLike(value) && objectToString.call(value) == symbolTag);
+}
+
+/**
+ * Converts `value` to a finite number.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.12.0
+ * @category Lang
+ * @param {*} value The value to convert.
+ * @returns {number} Returns the converted number.
+ * @example
+ *
+ * _.toFinite(3.2);
+ * // => 3.2
+ *
+ * _.toFinite(Number.MIN_VALUE);
+ * // => 5e-324
+ *
+ * _.toFinite(Infinity);
+ * // => 1.7976931348623157e+308
+ *
+ * _.toFinite('3.2');
+ * // => 3.2
+ */
+function toFinite(value) {
+  if (!value) {
+    return value === 0 ? value : 0;
+  }
+  value = toNumber(value);
+  if (value === INFINITY || value === -INFINITY) {
+    var sign = (value < 0 ? -1 : 1);
+    return sign * MAX_INTEGER;
+  }
+  return value === value ? value : 0;
+}
+
+/**
+ * Converts `value` to a number.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to process.
+ * @returns {number} Returns the number.
+ * @example
+ *
+ * _.toNumber(3.2);
+ * // => 3.2
+ *
+ * _.toNumber(Number.MIN_VALUE);
+ * // => 5e-324
+ *
+ * _.toNumber(Infinity);
+ * // => Infinity
+ *
+ * _.toNumber('3.2');
+ * // => 3.2
+ */
+function toNumber(value) {
+  if (typeof value == 'number') {
+    return value;
+  }
+  if (isSymbol(value)) {
+    return NAN;
+  }
+  if (isObject(value)) {
+    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
+    value = isObject(other) ? (other + '') : other;
+  }
+  if (typeof value != 'string') {
+    return value === 0 ? value : +value;
+  }
+  value = value.replace(reTrim, '');
+  var isBinary = reIsBinary.test(value);
+  return (isBinary || reIsOctal.test(value))
+    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+    : (reIsBadHex.test(value) ? NAN : +value);
+}
+
+/**
+ * Creates an array of numbers (positive and/or negative) progressing from
+ * `start` up to, but not including, `end`. A step of `-1` is used if a negative
+ * `start` is specified without an `end` or `step`. If `end` is not specified,
+ * it's set to `start` with `start` then set to `0`.
+ *
+ * **Note:** JavaScript follows the IEEE-754 standard for resolving
+ * floating-point values which can produce unexpected results.
+ *
+ * @static
+ * @since 0.1.0
+ * @memberOf _
+ * @category Util
+ * @param {number} [start=0] The start of the range.
+ * @param {number} end The end of the range.
+ * @param {number} [step=1] The value to increment or decrement by.
+ * @returns {Array} Returns the range of numbers.
+ * @see _.inRange, _.rangeRight
+ * @example
+ *
+ * _.range(4);
+ * // => [0, 1, 2, 3]
+ *
+ * _.range(-4);
+ * // => [0, -1, -2, -3]
+ *
+ * _.range(1, 5);
+ * // => [1, 2, 3, 4]
+ *
+ * _.range(0, 20, 5);
+ * // => [0, 5, 10, 15]
+ *
+ * _.range(0, -4, -1);
+ * // => [0, -1, -2, -3]
+ *
+ * _.range(1, 4, 0);
+ * // => [1, 1, 1]
+ *
+ * _.range(0);
+ * // => []
+ */
+var range = createRange();
+
+module.exports = range;
+
+},{}],96:[function(require,module,exports){
 /*!
  * map-cache <https://github.com/jonschlinkert/map-cache>
  *
@@ -7959,7 +10099,7 @@ MapCache.prototype.del = function mapDelete(key) {
   return this.has(key) && delete this.__data__[key];
 };
 
-},{}],83:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 'use strict';
 
 var util = require('util');
@@ -7998,7 +10138,7 @@ function isObject(val) {
   return val && (typeof val === 'function' || (!Array.isArray(val) && typeof val === 'object'));
 }
 
-},{"object-visit":100,"util":6}],84:[function(require,module,exports){
+},{"object-visit":114,"util":6}],98:[function(require,module,exports){
 'use strict';
 
 /**
@@ -8877,10 +11017,10 @@ micromatch.caches = cache.caches;
 
 module.exports = micromatch;
 
-},{"./lib/cache":85,"./lib/compilers":86,"./lib/parsers":87,"./lib/utils":88,"braces":23,"extend-shallow":47,"to-regex":152,"util":6}],85:[function(require,module,exports){
+},{"./lib/cache":99,"./lib/compilers":100,"./lib/parsers":101,"./lib/utils":102,"braces":35,"extend-shallow":59,"to-regex":166,"util":6}],99:[function(require,module,exports){
 module.exports = new (require('fragment-cache'))();
 
-},{"fragment-cache":62}],86:[function(require,module,exports){
+},{"fragment-cache":74}],100:[function(require,module,exports){
 'use strict';
 
 var nanomatch = require('nanomatch');
@@ -8959,7 +11099,7 @@ function escapeExtglobs(compiler) {
   }
 }
 
-},{"extglob":49,"nanomatch":92}],87:[function(require,module,exports){
+},{"extglob":61,"nanomatch":106}],101:[function(require,module,exports){
 'use strict';
 
 var extglob = require('extglob');
@@ -9044,7 +11184,7 @@ function textRegex(pattern) {
   return toRegex(prefix + notStr + ')', {strictClose: false});
 }
 
-},{"extglob":49,"nanomatch":92,"regex-not":104,"to-regex":152}],88:[function(require,module,exports){
+},{"extglob":61,"nanomatch":106,"regex-not":118,"to-regex":166}],102:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9357,7 +11497,7 @@ utils.unixify = function(options) {
 };
 
 }).call(this,require('_process'))
-},{"_process":3,"arr-diff":13,"array-unique":16,"define-property":35,"extend-shallow":47,"kind-of":81,"object.pick":101,"path":2,"snapdragon":123}],89:[function(require,module,exports){
+},{"_process":3,"arr-diff":25,"array-unique":28,"define-property":47,"extend-shallow":59,"kind-of":93,"object.pick":115,"path":2,"snapdragon":137}],103:[function(require,module,exports){
 'use strict';
 
 var isExtendable = require('is-extendable');
@@ -9412,9 +11552,9 @@ function isObject(val) {
 
 module.exports = mixinDeep;
 
-},{"for-in":61,"is-extendable":90}],90:[function(require,module,exports){
-arguments[4][48][0].apply(exports,arguments)
-},{"dup":48,"is-plain-object":77}],91:[function(require,module,exports){
+},{"for-in":73,"is-extendable":104}],104:[function(require,module,exports){
+arguments[4][60][0].apply(exports,arguments)
+},{"dup":60,"is-plain-object":89}],105:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -9568,7 +11708,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],92:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 'use strict';
 
 /**
@@ -10408,9 +12548,9 @@ nanomatch.cache = cache;
 
 module.exports = nanomatch;
 
-},{"./lib/cache":93,"./lib/compilers":94,"./lib/parsers":95,"./lib/utils":96,"extend-shallow":47,"to-regex":152,"util":6}],93:[function(require,module,exports){
-arguments[4][85][0].apply(exports,arguments)
-},{"dup":85,"fragment-cache":62}],94:[function(require,module,exports){
+},{"./lib/cache":107,"./lib/compilers":108,"./lib/parsers":109,"./lib/utils":110,"extend-shallow":59,"to-regex":166,"util":6}],107:[function(require,module,exports){
+arguments[4][99][0].apply(exports,arguments)
+},{"dup":99,"fragment-cache":74}],108:[function(require,module,exports){
 'use strict';
 
 /**
@@ -10751,7 +12891,7 @@ module.exports = function(nanomatch, options) {
 };
 
 
-},{}],95:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 'use strict';
 
 var regexNot = require('regex-not');
@@ -11139,7 +13279,7 @@ function createTextRegex(pattern) {
 
 module.exports.not = NOT_REGEX;
 
-},{"regex-not":104,"to-regex":152}],96:[function(require,module,exports){
+},{"regex-not":118,"to-regex":166}],110:[function(require,module,exports){
 'use strict';
 
 var utils = module.exports;
@@ -11520,7 +13660,7 @@ utils.unixify = function(options) {
   };
 };
 
-},{"arr-diff":13,"array-unique":16,"define-property":35,"extend-shallow":47,"is-windows":78,"kind-of":81,"object.pick":101,"path":2,"snapdragon":123}],97:[function(require,module,exports){
+},{"arr-diff":25,"array-unique":28,"define-property":47,"extend-shallow":59,"is-windows":90,"kind-of":93,"object.pick":115,"path":2,"snapdragon":137}],111:[function(require,module,exports){
 'use strict';
 
 var typeOf = require('kind-of');
@@ -11696,11 +13836,11 @@ module.exports = copy;
 
 module.exports.has = has;
 
-},{"copy-descriptor":34,"define-property":98,"kind-of":99}],98:[function(require,module,exports){
-arguments[4][31][0].apply(exports,arguments)
-},{"dup":31,"is-descriptor":72}],99:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68,"is-buffer":69}],100:[function(require,module,exports){
+},{"copy-descriptor":46,"define-property":112,"kind-of":113}],112:[function(require,module,exports){
+arguments[4][43][0].apply(exports,arguments)
+},{"dup":43,"is-descriptor":84}],113:[function(require,module,exports){
+arguments[4][80][0].apply(exports,arguments)
+},{"dup":80,"is-buffer":81}],114:[function(require,module,exports){
 /*!
  * object-visit <https://github.com/jonschlinkert/object-visit>
  *
@@ -11735,7 +13875,7 @@ module.exports = function visit(thisArg, method, target, val) {
   return thisArg;
 };
 
-},{"isobject":80}],101:[function(require,module,exports){
+},{"isobject":92}],115:[function(require,module,exports){
 /*!
  * object.pick <https://github.com/jonschlinkert/object.pick>
  *
@@ -11772,7 +13912,7 @@ module.exports = function pick(obj, keys) {
   return res;
 };
 
-},{"isobject":80}],102:[function(require,module,exports){
+},{"isobject":92}],116:[function(require,module,exports){
 /*!
  * pascalcase <https://github.com/jonschlinkert/pascalcase>
  *
@@ -11795,7 +13935,7 @@ function pascalcase(str) {
 
 module.exports = pascalcase;
 
-},{}],103:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 'use strict';
 
 /**
@@ -11819,7 +13959,7 @@ module.exports = {
   xdigit: 'A-Fa-f0-9'
 };
 
-},{}],104:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 'use strict';
 
 var extend = require('extend-shallow');
@@ -11893,7 +14033,7 @@ toRegex.create = function(pattern, options) {
 
 module.exports = toRegex;
 
-},{"extend-shallow":47,"safe-regex":113}],105:[function(require,module,exports){
+},{"extend-shallow":59,"safe-regex":127}],119:[function(require,module,exports){
 /*!
  * repeat-element <https://github.com/jonschlinkert/repeat-element>
  *
@@ -11913,7 +14053,7 @@ module.exports = function repeat(ele, num) {
   return arr;
 };
 
-},{}],106:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 /*!
  * repeat-string <https://github.com/jonschlinkert/repeat-string>
  *
@@ -11985,7 +14125,7 @@ function repeat(str, num) {
   return res;
 }
 
-},{}],107:[function(require,module,exports){
+},{}],121:[function(require,module,exports){
 // Copyright 2014 Simon Lydell
 // X11 (“MIT”) Licensed. (See LICENSE.)
 
@@ -12034,7 +14174,7 @@ void (function(root, factory) {
 
 }));
 
-},{}],108:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 var util      = require('./util');
 var types     = require('./types');
 var sets      = require('./sets');
@@ -12318,7 +14458,7 @@ module.exports = function(regexpStr) {
 
 module.exports.types = types;
 
-},{"./positions":109,"./sets":110,"./types":111,"./util":112}],109:[function(require,module,exports){
+},{"./positions":123,"./sets":124,"./types":125,"./util":126}],123:[function(require,module,exports){
 var types = require('./types');
 
 exports.wordBoundary = function() {
@@ -12337,7 +14477,7 @@ exports.end = function() {
   return { type: types.POSITION, value: '$' };
 };
 
-},{"./types":111}],110:[function(require,module,exports){
+},{"./types":125}],124:[function(require,module,exports){
 var types = require('./types');
 
 var INTS = function() {
@@ -12421,7 +14561,7 @@ exports.anyChar = function() {
   return { type: types.SET, set: NOTANYCHAR(), not: true };
 };
 
-},{"./types":111}],111:[function(require,module,exports){
+},{"./types":125}],125:[function(require,module,exports){
 module.exports = {
   ROOT       : 0,
   GROUP      : 1,
@@ -12433,7 +14573,7 @@ module.exports = {
   CHAR       : 7,
 };
 
-},{}],112:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 var types = require('./types');
 var sets  = require('./sets');
 
@@ -12546,7 +14686,7 @@ exports.error = function(regexp, msg) {
   throw new SyntaxError('Invalid regular expression: /' + regexp + '/: ' + msg);
 };
 
-},{"./sets":110,"./types":111}],113:[function(require,module,exports){
+},{"./sets":124,"./types":125}],127:[function(require,module,exports){
 var parse = require('ret');
 var types = parse.types;
 
@@ -12591,7 +14731,7 @@ function isRegExp (x) {
     return {}.toString.call(x) === '[object RegExp]';
 }
 
-},{"ret":108}],114:[function(require,module,exports){
+},{"ret":122}],128:[function(require,module,exports){
 /*!
  * set-value <https://github.com/jonschlinkert/set-value>
  *
@@ -12644,9 +14784,9 @@ module.exports = function(obj, prop, val) {
   return obj;
 };
 
-},{"extend-shallow":115,"is-extendable":74,"is-plain-object":77,"split-string":146}],115:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28,"is-extendable":74}],116:[function(require,module,exports){
+},{"extend-shallow":129,"is-extendable":86,"is-plain-object":89,"split-string":160}],129:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"dup":40,"is-extendable":86}],130:[function(require,module,exports){
 'use strict';
 
 var isObject = require('isobject');
@@ -13140,15 +15280,15 @@ function assert(val, message) {
 
 exports = module.exports = Node;
 
-},{"define-property":117,"isobject":80,"snapdragon-util":121}],117:[function(require,module,exports){
-arguments[4][19][0].apply(exports,arguments)
-},{"dup":19,"is-descriptor":120}],118:[function(require,module,exports){
-arguments[4][20][0].apply(exports,arguments)
-},{"dup":20,"kind-of":81}],119:[function(require,module,exports){
-arguments[4][21][0].apply(exports,arguments)
-},{"dup":21,"kind-of":81}],120:[function(require,module,exports){
-arguments[4][22][0].apply(exports,arguments)
-},{"dup":22,"is-accessor-descriptor":118,"is-data-descriptor":119,"kind-of":81}],121:[function(require,module,exports){
+},{"define-property":131,"isobject":92,"snapdragon-util":135}],131:[function(require,module,exports){
+arguments[4][31][0].apply(exports,arguments)
+},{"dup":31,"is-descriptor":134}],132:[function(require,module,exports){
+arguments[4][32][0].apply(exports,arguments)
+},{"dup":32,"kind-of":93}],133:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33,"kind-of":93}],134:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34,"is-accessor-descriptor":132,"is-data-descriptor":133,"kind-of":93}],135:[function(require,module,exports){
 'use strict';
 
 var typeOf = require('kind-of');
@@ -14169,9 +16309,9 @@ function assert(val, message) {
   if (!val) throw new Error(message);
 }
 
-},{"kind-of":122}],122:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68,"is-buffer":69}],123:[function(require,module,exports){
+},{"kind-of":136}],136:[function(require,module,exports){
+arguments[4][80][0].apply(exports,arguments)
+},{"dup":80,"is-buffer":81}],137:[function(require,module,exports){
 'use strict';
 
 var Base = require('base');
@@ -14347,7 +16487,7 @@ module.exports = Snapdragon;
 module.exports.Compiler = Compiler;
 module.exports.Parser = Parser;
 
-},{"./lib/compiler":124,"./lib/parser":125,"./lib/utils":128,"base":18,"define-property":131}],124:[function(require,module,exports){
+},{"./lib/compiler":138,"./lib/parser":139,"./lib/utils":142,"base":30,"define-property":145}],138:[function(require,module,exports){
 (function (__filename){
 'use strict';
 
@@ -14528,7 +16668,7 @@ Compiler.prototype = {
 module.exports = Compiler;
 
 }).call(this,"/node_modules\\snapdragon\\lib\\compiler.js")
-},{"./source-maps":127,"./utils":128,"debug":129,"define-property":131,"use":160}],125:[function(require,module,exports){
+},{"./source-maps":141,"./utils":142,"debug":143,"define-property":145,"use":174}],139:[function(require,module,exports){
 (function (__filename){
 'use strict';
 
@@ -15065,7 +17205,7 @@ function hasDelims(node) {
 module.exports = Parser;
 
 }).call(this,"/node_modules\\snapdragon\\lib\\parser.js")
-},{"./position":126,"./utils":128,"debug":129,"define-property":131,"map-cache":82,"use":160,"util":6}],126:[function(require,module,exports){
+},{"./position":140,"./utils":142,"debug":143,"define-property":145,"map-cache":96,"use":174,"util":6}],140:[function(require,module,exports){
 'use strict';
 
 var define = require('define-property');
@@ -15081,7 +17221,7 @@ module.exports = function Position(start, parser) {
   define(this, 'source', parser.options.source);
 };
 
-},{"define-property":131}],127:[function(require,module,exports){
+},{"define-property":145}],141:[function(require,module,exports){
 'use strict';
 
 var fs = require('fs');
@@ -15228,7 +17368,7 @@ exports.comment = function(node) {
   return this._comment(node);
 };
 
-},{"./utils":128,"define-property":131,"fs":1,"path":2}],128:[function(require,module,exports){
+},{"./utils":142,"define-property":145,"fs":1,"path":2}],142:[function(require,module,exports){
 'use strict';
 
 /**
@@ -15278,15 +17418,15 @@ exports.last = function(arr, n) {
   return arr[arr.length - (n || 1)];
 };
 
-},{"extend-shallow":132,"source-map":145,"source-map-resolve":133}],129:[function(require,module,exports){
+},{"extend-shallow":146,"source-map":159,"source-map-resolve":147}],143:[function(require,module,exports){
+arguments[4][55][0].apply(exports,arguments)
+},{"./debug":144,"_process":3,"dup":55}],144:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56,"ms":105}],145:[function(require,module,exports){
 arguments[4][43][0].apply(exports,arguments)
-},{"./debug":130,"_process":3,"dup":43}],130:[function(require,module,exports){
-arguments[4][44][0].apply(exports,arguments)
-},{"dup":44,"ms":91}],131:[function(require,module,exports){
-arguments[4][31][0].apply(exports,arguments)
-},{"dup":31,"is-descriptor":72}],132:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28,"is-extendable":74}],133:[function(require,module,exports){
+},{"dup":43,"is-descriptor":84}],146:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"dup":40,"is-extendable":86}],147:[function(require,module,exports){
 // Copyright 2014, 2015, 2016, 2017 Simon Lydell
 // X11 (“MIT”) Licensed. (See LICENSE.)
 
@@ -15597,7 +17737,7 @@ void (function(root, factory) {
 
 }));
 
-},{"resolve-url":107,"source-map-url":134}],134:[function(require,module,exports){
+},{"resolve-url":121,"source-map-url":148}],148:[function(require,module,exports){
 // Copyright 2014 Simon Lydell
 // X11 (“MIT”) Licensed. (See LICENSE.)
 
@@ -15656,7 +17796,7 @@ void (function(root, factory) {
 
 }));
 
-},{}],135:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15779,7 +17919,7 @@ ArraySet.prototype.toArray = function ArraySet_toArray() {
 
 exports.ArraySet = ArraySet;
 
-},{"./util":144}],136:[function(require,module,exports){
+},{"./util":158}],150:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15921,7 +18061,7 @@ exports.decode = function base64VLQ_decode(aStr, aIndex, aOutParam) {
   aOutParam.rest = aIndex;
 };
 
-},{"./base64":137}],137:[function(require,module,exports){
+},{"./base64":151}],151:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -15990,7 +18130,7 @@ exports.decode = function (charCode) {
   return -1;
 };
 
-},{}],138:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -16103,7 +18243,7 @@ exports.search = function search(aNeedle, aHaystack, aCompare, aBias) {
   return index;
 };
 
-},{}],139:[function(require,module,exports){
+},{}],153:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2014 Mozilla Foundation and contributors
@@ -16184,7 +18324,7 @@ MappingList.prototype.toArray = function MappingList_toArray() {
 
 exports.MappingList = MappingList;
 
-},{"./util":144}],140:[function(require,module,exports){
+},{"./util":158}],154:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -16300,7 +18440,7 @@ exports.quickSort = function (ary, comparator) {
   doQuickSort(ary, comparator, 0, ary.length - 1);
 };
 
-},{}],141:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -17384,7 +19524,7 @@ IndexedSourceMapConsumer.prototype._parseMappings =
 
 exports.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
 
-},{"./array-set":135,"./base64-vlq":136,"./binary-search":138,"./quick-sort":140,"./util":144}],142:[function(require,module,exports){
+},{"./array-set":149,"./base64-vlq":150,"./binary-search":152,"./quick-sort":154,"./util":158}],156:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -17802,7 +19942,7 @@ SourceMapGenerator.prototype.toString =
 
 exports.SourceMapGenerator = SourceMapGenerator;
 
-},{"./array-set":135,"./base64-vlq":136,"./mapping-list":139,"./util":144}],143:[function(require,module,exports){
+},{"./array-set":149,"./base64-vlq":150,"./mapping-list":153,"./util":158}],157:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -18217,7 +20357,7 @@ SourceNode.prototype.toStringWithSourceMap = function SourceNode_toStringWithSou
 
 exports.SourceNode = SourceNode;
 
-},{"./source-map-generator":142,"./util":144}],144:[function(require,module,exports){
+},{"./source-map-generator":156,"./util":158}],158:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -18636,7 +20776,7 @@ function compareByGeneratedPositionsInflated(mappingA, mappingB) {
 }
 exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
 
-},{}],145:[function(require,module,exports){
+},{}],159:[function(require,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -18646,7 +20786,7 @@ exports.SourceMapGenerator = require('./lib/source-map-generator').SourceMapGene
 exports.SourceMapConsumer = require('./lib/source-map-consumer').SourceMapConsumer;
 exports.SourceNode = require('./lib/source-node').SourceNode;
 
-},{"./lib/source-map-consumer":141,"./lib/source-map-generator":142,"./lib/source-node":143}],146:[function(require,module,exports){
+},{"./lib/source-map-consumer":155,"./lib/source-map-generator":156,"./lib/source-node":157}],160:[function(require,module,exports){
 /*!
  * split-string <https://github.com/jonschlinkert/split-string>
  *
@@ -18819,7 +20959,7 @@ function keepEscaping(opts, str, idx) {
   return opts.keepEscaping === true || str[idx + 1] === '\\';
 }
 
-},{"extend-shallow":47}],147:[function(require,module,exports){
+},{"extend-shallow":59}],161:[function(require,module,exports){
 /*!
  * static-extend <https://github.com/jonschlinkert/static-extend>
  *
@@ -18911,9 +21051,9 @@ function extend(Parent, extendFn) {
 
 module.exports = extend;
 
-},{"define-property":148,"object-copy":97,"util":6}],148:[function(require,module,exports){
-arguments[4][31][0].apply(exports,arguments)
-},{"dup":31,"is-descriptor":72}],149:[function(require,module,exports){
+},{"define-property":162,"object-copy":111,"util":6}],162:[function(require,module,exports){
+arguments[4][43][0].apply(exports,arguments)
+},{"dup":43,"is-descriptor":84}],163:[function(require,module,exports){
 /*!
  * to-object-path <https://github.com/jonschlinkert/to-object-path>
  *
@@ -18948,9 +21088,9 @@ function filter(arr) {
   return res;
 }
 
-},{"kind-of":150}],150:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68,"is-buffer":69}],151:[function(require,module,exports){
+},{"kind-of":164}],164:[function(require,module,exports){
+arguments[4][80][0].apply(exports,arguments)
+},{"dup":80,"is-buffer":81}],165:[function(require,module,exports){
 /*!
  * to-regex-range <https://github.com/jonschlinkert/to-regex-range>
  *
@@ -19246,7 +21386,7 @@ function padZeros(val, tok) {
 
 module.exports = toRegexRange;
 
-},{"is-number":75,"repeat-string":106}],152:[function(require,module,exports){
+},{"is-number":87,"repeat-string":120}],166:[function(require,module,exports){
 'use strict';
 
 var safe = require('safe-regex');
@@ -19403,7 +21543,7 @@ function createKey(pattern, options) {
 
 module.exports.makeRe = makeRe;
 
-},{"define-property":35,"extend-shallow":47,"regex-not":104,"safe-regex":113}],153:[function(require,module,exports){
+},{"define-property":47,"extend-shallow":59,"regex-not":118,"safe-regex":127}],167:[function(require,module,exports){
 'use strict';
 
 var isObject = require('is-extendable');
@@ -19435,9 +21575,9 @@ function arrayify(val) {
   return [val];
 }
 
-},{"arr-union":15,"get-value":63,"is-extendable":74,"set-value":155}],154:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28,"is-extendable":74}],155:[function(require,module,exports){
+},{"arr-union":27,"get-value":75,"is-extendable":86,"set-value":169}],168:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"dup":40,"is-extendable":86}],169:[function(require,module,exports){
 /*!
  * set-value <https://github.com/jonschlinkert/set-value>
  *
@@ -19502,7 +21642,7 @@ module.exports = function(obj, path, val) {
 };
 
 
-},{"extend-shallow":154,"is-extendable":74,"is-plain-object":77,"to-object-path":149}],156:[function(require,module,exports){
+},{"extend-shallow":168,"is-extendable":86,"is-plain-object":89,"to-object-path":163}],170:[function(require,module,exports){
 /*!
  * unset-value <https://github.com/jonschlinkert/unset-value>
  *
@@ -19536,7 +21676,7 @@ module.exports = function unset(obj, prop) {
   return true;
 };
 
-},{"has-value":157,"isobject":80}],157:[function(require,module,exports){
+},{"has-value":171,"isobject":92}],171:[function(require,module,exports){
 /*!
  * has-value <https://github.com/jonschlinkert/has-value>
  *
@@ -19557,7 +21697,7 @@ module.exports = function(obj, prop, noZero) {
   return hasValues(obj, prop);
 };
 
-},{"get-value":63,"has-values":159,"isobject":158}],158:[function(require,module,exports){
+},{"get-value":75,"has-values":173,"isobject":172}],172:[function(require,module,exports){
 /*!
  * isobject <https://github.com/jonschlinkert/isobject>
  *
@@ -19573,7 +21713,7 @@ module.exports = function isObject(val) {
   return val != null && typeof val === 'object' && isArray(val) === false;
 };
 
-},{"isarray":79}],159:[function(require,module,exports){
+},{"isarray":91}],173:[function(require,module,exports){
 /*!
  * has-values <https://github.com/jonschlinkert/has-values>
  *
@@ -19611,7 +21751,7 @@ module.exports = function hasValue(o, noZero) {
   return false;
 };
 
-},{}],160:[function(require,module,exports){
+},{}],174:[function(require,module,exports){
 /*!
  * use <https://github.com/jonschlinkert/use>
  *
@@ -19768,4 +21908,4 @@ function define(obj, key, val) {
   });
 }
 
-},{}]},{},[9]);
+},{}]},{},[13]);

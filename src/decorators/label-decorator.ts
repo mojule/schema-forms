@@ -1,12 +1,11 @@
 import * as H from '@mojule/h'
-import { NamedFormElement } from '../types'
-import { inclusiveSelect } from '../utils'
-import { formElementSelector } from '../form-element-selector'
+import { NamedFormElement, ElementDecorator } from '../types'
+import { formElementSelector } from '../consts'
 
 export const LabelDecorator = ( document: Document ) => {
   const { label, span } = H( document )
 
-  const labelDecorator = ( editor: HTMLElement ) => {
+  const labelDecorator: ElementDecorator = ( editor: HTMLElement ) => {
     const inputs = <NamedFormElement[]>Array.from(
       editor.querySelectorAll( formElementSelector )
     )

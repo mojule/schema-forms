@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const H = require("@mojule/h");
-const form_element_selector_1 = require("../form-element-selector");
+const consts_1 = require("../consts");
 exports.LabelDecorator = (document) => {
     const { label, span } = H(document);
     const labelDecorator = (editor) => {
-        const inputs = Array.from(editor.querySelectorAll(form_element_selector_1.formElementSelector));
+        const inputs = Array.from(editor.querySelectorAll(consts_1.formElementSelector));
         inputs.forEach(input => {
             if (!input)
                 return;

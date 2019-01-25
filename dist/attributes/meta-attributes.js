@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.metaAttributes = (meta) => {
     const { schema, keyIndex } = meta;
     const { id, title } = schema;
-    let type = String(schema.type);
+    let type = schema.type;
     if (type === 'array' && Array.isArray(schema.items))
         type = 'tuple';
     const data = { title };

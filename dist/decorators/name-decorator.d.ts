@@ -1,1 +1,3 @@
-export declare const nameDecorator: (editor: HTMLElement) => void;
+import { ElementDecorator } from '../types';
+export declare const nameDecorator: ElementDecorator;
+export declare const getName: (el: HTMLElement) => string;

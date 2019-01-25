@@ -1,16 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
-const form_element_selector_1 = require("../form-element-selector");
+const consts_1 = require("../consts");
 exports.nameDecorator = (editor) => {
-    const input = utils_1.inclusiveSelect(editor, form_element_selector_1.formElementSelector);
+    const input = utils_1.inclusiveSelect(editor, consts_1.formElementSelector);
     if (!input)
         return;
-    const name = getName(input);
+    const selectorAncestor = input.closest('.selector');
+    if (selectorAncestor)
+        return;
+    const name = exports.getName(input);
     const { type } = editor.dataset;
     input.name = `${name}#${type}`;
 };
-const getName = (el) => {
+exports.getName = (el) => {
     let name = '';
     let nextKeyEl = el.closest('[data-key]');
     while (nextKeyEl) {

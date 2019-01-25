@@ -1,6 +1,6 @@
 import { expand } from '@mojule/json-pointer'
 import { NamedFormElement } from './types'
-import { formElementSelector } from './form-element-selector'
+import { formElementSelector } from './consts'
 
 export const getData = ( parent: ParentNode ) => {
   const flat: any = {}

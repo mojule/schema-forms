@@ -8,6 +8,7 @@ exports.FieldsetDecorator = (document) => {
         const fieldsetEl = fieldset(legend(title));
         element.before(fieldsetEl);
         fieldsetEl.appendChild(element);
+        fieldsetEl.dataset.title = title;
     };
     return fieldsetDecorator;
 };

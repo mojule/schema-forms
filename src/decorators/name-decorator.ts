@@ -1,11 +1,15 @@
 import { exclusiveClosest, inclusiveSelect } from '../utils'
-import { formElementSelector } from '../form-element-selector'
-import { NamedFormElement } from '../types'
+import { formElementSelector } from '../consts'
+import { NamedFormElement, ElementDecorator } from '../types'
 
-export const nameDecorator = ( editor: HTMLElement ) => {
+export const nameDecorator: ElementDecorator = ( editor: HTMLElement ) => {
   const input = <NamedFormElement>inclusiveSelect( editor, formElementSelector )
 
   if ( !input ) return
+
+  const selectorAncestor = input.closest( '.selector' )
+
+  if( selectorAncestor ) return
 
   const name = getName( input )
   const { type } = editor.dataset
@@ -13,7 +17,7 @@ export const nameDecorator = ( editor: HTMLElement ) => {
   input.name = `${ name }#${ type }`
 }
 
-const getName = ( el: NamedFormElement ) => {
+export const getName = ( el: HTMLElement ) => {
   let name = ''
   let nextKeyEl = <HTMLElement | null>el.closest( '[data-key]' )
 

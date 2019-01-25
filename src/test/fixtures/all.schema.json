@@ -293,7 +293,10 @@
           "type": "number"
         }
       },
-      "required": [ "foo", "bar" ]
+      "required": [
+        "foo",
+        "bar"
+      ]
     },
     "complex": {
       "title": "Complex",
@@ -351,6 +354,25 @@
           "default": 1
         }
       ]
+    },
+    "arrayOfOneOf": {
+      "title": "Array of One Of",
+      "type": "array",
+      "items": {
+        "title": "One Of in Array",
+        "oneOf": [
+          {
+            "title": "oneOf is a string",
+            "type": "string",
+            "default": "Foo"
+          },
+          {
+            "title": "oneOf is a number",
+            "type": "number",
+            "default": 1
+          }
+        ]
+      }
     },
     "anyOf": {
       "title": "Any Of",

@@ -1,9 +1,9 @@
 export declare const Templates: (document: Document) => {
-    booleanEditor: ({ schema }: import("../types").SchemaMetaData) => HTMLInputElement;
-    constEditor: ({ schema }: import("../types").SchemaMetaData) => HTMLInputElement;
-    container: (meta: import("../types").SchemaMetaData) => HTMLDivElement;
-    editor: (meta: import("../types").SchemaMetaData) => HTMLDivElement;
-    enumEditor: (meta: import("../types").SchemaMetaData) => HTMLDivElement | HTMLSelectElement;
-    numberEditor: (meta: import("../types").SchemaMetaData) => HTMLInputElement;
-    stringEditor: (meta: import("../types").SchemaMetaData) => HTMLInputElement | HTMLTextAreaElement;
+    booleanEditor: import("../types").Template;
+    constEditor: import("../types").Template;
+    container: import("../types").Template;
+    editor: import("../types").Template;
+    enumEditor: import("../types").Template;
+    numberEditor: import("../types").Template;
+    stringEditor: import("../types").Template;
 };

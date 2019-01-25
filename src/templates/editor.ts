@@ -1,8 +1,8 @@
 import * as H from '@mojule/h'
-import { SchemaMetaData } from '../types'
+import { SchemaMetaData, TemplateFactory } from '../types'
 import { metaAttributes } from '../attributes/meta-attributes'
 
-export const Editor = ( document: Document ) => {
+export const Editor: TemplateFactory = ( document: Document ) => {
   const { div } = H( document )
 
   const editor = ( meta: SchemaMetaData ) => {

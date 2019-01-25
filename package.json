@@ -8,7 +8,7 @@
     "build": "tsc",
     "test": "tsc && mocha ./dist/test",
     "coverage": "tsc && nyc --reporter=html --reporter=text mocha ./dist/test",
-    "sandbox": "tsc && node ./dist/sandbox/generate-html.js && browserify ./dist/sandbox/client.js -o ./sandbox/client.js"
+    "examples": "tsc && node ./dist/examples/generate-html.js && browserify ./dist/examples/client.js -o ./examples/client.js"
   },
   "nyc": {
     "exclude": [

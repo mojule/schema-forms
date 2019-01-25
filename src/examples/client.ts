@@ -1,4 +1,5 @@
 import { getData } from '../get-data'
+import { onMutate } from '../client/on-mutate';
 
 document.addEventListener( 'DOMContentLoaded', () => {
   const form = document.querySelector( 'form' )!
@@ -21,4 +22,6 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
     console.log( entries )
   }
+
+  onMutate( form )
 } )

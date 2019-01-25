@@ -1,8 +1,8 @@
 import * as H from '@mojule/h'
-import { SchemaMetaData } from '../types'
+import { SchemaMetaData, TemplateFactory } from '../types'
 import { isRequired } from '../utils';
 
-export const EnumEditor = ( document: Document ) => {
+export const EnumEditor: TemplateFactory = ( document: Document ) => {
   const { select, option, div, input } = H( document )
 
   const enumEditor = ( meta: SchemaMetaData ) => {

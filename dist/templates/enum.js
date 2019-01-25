@@ -35,12 +35,9 @@ exports.EnumEditor = (document) => {
         const attributes = {
             data: { enumType: 'select' }
         };
-        const elementIsRequired = utils_1.isRequired(meta);
-        if (elementIsRequired)
+        if (utils_1.isRequired(meta))
             attributes.required = '';
         const element = select(attributes);
-        if (!elementIsRequired)
-            element.appendChild(option());
         schema.enum.forEach((value, i) => {
             value = String(value);
             const title = schema._esTitles ? schema._esTitles[i] : value;

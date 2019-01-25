@@ -1,1 +1,2 @@
-export declare const LabelDecorator: (document: Document) => (editor: HTMLElement) => void;
+import { ElementDecorator } from '../types';
+export declare const LabelDecorator: (document: Document) => ElementDecorator;

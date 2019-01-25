@@ -1,8 +1,8 @@
 import * as H from '@mojule/h'
-import { SchemaMetaData } from '../types'
-import { isRequired } from '../utils';
+import { SchemaMetaData, TemplateFactory } from '../types'
+import { isRequired } from '../utils'
 
-export const NumberEditor = ( document: Document ) => {
+export const NumberEditor: TemplateFactory = ( document: Document ) => {
   const { input } = H( document )
 
   const numberEditor = ( meta: SchemaMetaData ) => {

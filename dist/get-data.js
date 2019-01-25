@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const json_pointer_1 = require("@mojule/json-pointer");
-const form_element_selector_1 = require("./form-element-selector");
+const consts_1 = require("./consts");
 exports.getData = (parent) => {
     const flat = {};
-    const namedElements = Array.from(parent.querySelectorAll(form_element_selector_1.formElementSelector));
+    const namedElements = Array.from(parent.querySelectorAll(consts_1.formElementSelector));
     namedElements.forEach(namedElement => {
         const [name] = namedElement.name.split('#');
         const editor = namedElement.closest('.editor');

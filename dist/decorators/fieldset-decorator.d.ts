@@ -1,1 +1,2 @@
-export declare const FieldsetDecorator: (document: Document) => (element: HTMLElement) => void;
+import { ElementDecorator } from '../types';
+export declare const FieldsetDecorator: (document: Document) => ElementDecorator;

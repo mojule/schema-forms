@@ -1,5 +1,5 @@
 import * as H from '@mojule/h'
-import { SchemaMetaData } from '../types'
+import { SchemaMetaData, TemplateFactory } from '../types'
 import { isRequired } from '../utils'
 
 const formatToType = {
@@ -7,7 +7,7 @@ const formatToType = {
   uri: 'url'
 }
 
-export const StringEditor = ( document: Document ) => {
+export const StringEditor: TemplateFactory = ( document: Document ) => {
   const { input, textarea } = H( document )
 
   const stringEditor = ( meta: SchemaMetaData ) => {
