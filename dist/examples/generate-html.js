@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const jsdom_1 = require("jsdom");
 const fs_1 = require("fs");
 const schema_to_dom_1 = require("../schema-to-dom");
-const fixtures_1 = require("../test/fixtures");
+const schema_1 = require("./schema");
 const { writeFile } = fs_1.promises;
 const jsdom = (new jsdom_1.JSDOM(`<!doctype html>
 <html>
@@ -22,8 +22,8 @@ const { document } = jsdom.window;
 const start = async () => {
     try {
         const formEl = document.querySelector('form');
-        const fragment = schema_to_dom_1.schemaToDom(fixtures_1.all, document);
-        formEl.appendChild(fragment);
+        const schemaDom = schema_to_dom_1.schemaToDom(schema_1.all, document);
+        formEl.appendChild(schemaDom);
         const submit = document.createElement('input');
         submit.type = 'submit';
         formEl.appendChild(submit);

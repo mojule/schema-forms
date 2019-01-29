@@ -30,7 +30,7 @@
       "type": "node",
       "request": "launch",
       "name": "Sandbox",
-      "program": "${workspaceFolder}/dist/sandbox/generate-html.js",
+      "program": "${workspaceFolder}/dist/examples/generate-html.js",
       "cwd": "${workspaceFolder}"
     }
   ]

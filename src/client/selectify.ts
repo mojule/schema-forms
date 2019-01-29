@@ -1,14 +1,18 @@
 import { EnumEditor } from '../templates/enum'
 import { JSONSchema4TypeName } from 'json-schema'
 import { LabelDecorator } from '../decorators/label-decorator'
-import { nameDecorator } from '../decorators/name-decorator'
+import { nameDecorator, getName } from '../decorators/name-decorator'
 import { onMutate } from './on-mutate'
-import { inclusiveSelect } from '../utils'
+import { inclusiveSelect, strictClosest, pointerToSelector, strictData, strictSelect, randomId } from '../utils'
 
 const enumEditor = EnumEditor( document )
 const labelDecorator = LabelDecorator( document )
 
 export const selectify = ( element: HTMLElement ) => {
+  const rootElement = strictClosest( element, '[data-root]' )
+
+  rootElement.addEventListener( 'change', onChange )
+
   const selectableEls = Array.from(
     <NodeListOf<HTMLElement>>element.querySelectorAll(
       '[data-one-of], [data-any-of]'
@@ -20,80 +24,122 @@ export const selectify = ( element: HTMLElement ) => {
       selectableEl.children
     )
 
-    if ( itemEls.length === 0 ) return
+    if (
+      itemEls.length === 0 ||
+      itemEls.some( el => el.classList.contains( 'selection' ) )
+    ) return
 
-    const titles = itemEls.map( ( el, i ) => {
-      const titleEl = <HTMLElement>inclusiveSelect( el, '[data-title]' )
+    const name = getName( selectableEl )
+    const id = pointerToSelector( name )
 
-      return titleEl.dataset.title || String( i + 1 )
-    } )
-
-    const selectorEnum = {
-      title: selectableEl.dataset.title || 'One Of',
-      type: <JSONSchema4TypeName>'string',
-      enum: titles
-    }
-
-    const selector: HTMLElement = enumEditor( {
-      schema: selectorEnum,
-      pointer: '',
-      root: selectorEnum
-    } )
-
-    selector.classList.add( 'selector' )
+    const selector = createSelector( selectableEl, itemEls, id )
 
     selectableEl.appendChild( selector )
 
     labelDecorator( selector )
 
+    const selection = createSelection( id )
+
+    selectableEl.appendChild( selection )
+
     itemEls.forEach( ( itemEl, i ) => {
-      delete itemEl.dataset.key
-      const template = document.createElement( 'template' )
-      template.dataset.index = String( i )
-      template.content.appendChild( itemEl )
-      selectableEl.appendChild( template )
+      const keyEl = <HTMLElement>inclusiveSelect( itemEl, '[data-key]' )
+
+      if( !keyEl ) throw Error( `Expected [data-key]` )
+
+      delete keyEl.dataset.key
+
+      const itemId = `${ id }__${ i }`
+      const template = createTemplate( itemEl, itemId )
+
+      rootElement.appendChild( template )
     } )
 
-    const choose = ( index: number ) => {
-      const existing = Array.from( selectableEl.children )
+    choose( selection, id, '0' )
+  } )
+}
 
-      existing.forEach( el => {
-        if ( el !== selector && el.localName !== 'template' ) el.remove()
-      } )
+const createSelection = ( id: string ) => {
+  const selection = document.createElement( 'div' )
 
-      const template = <HTMLTemplateElement>selectableEl.querySelector(
-        `template[data-index="${ index }"]`
-      )
+  selection.classList.add( 'selection' )
+  selection.id = id + '__selection'
 
-      const el = <HTMLElement>template.content.cloneNode( true )
-      selectableEl.appendChild( el )
+  return selection
+}
 
-      nameDecorator( selectableEl )
-      onMutate( selectableEl )
-    }
+const createSelector = ( selectableEl: HTMLElement, itemEls: HTMLElement[], id: string ) => {
+  const titles = itemEls.map( ( el, i ) => {
+    const titleEl = <HTMLElement>inclusiveSelect( el, '[data-title]' )
 
-    // could be either radios or select
-    const radios = <HTMLInputElement[]>Array.from(
+    return titleEl.dataset.title || String( i + 1 )
+  } )
+
+  const selectorEnum = {
+    title: selectableEl.dataset.title || 'One Of',
+    type: <JSONSchema4TypeName>'number',
+    enum: Array.from( titles.keys() ),
+    default: 0
+  }
+
+  selectorEnum[ '_esTitles' ] = titles
+
+  const selector: HTMLElement = enumEditor( {
+    schema: selectorEnum,
+    pointer: '',
+    root: selectorEnum
+  } )
+
+  selector.classList.add( 'selector' )
+  selector.dataset.templateId = id
+  selector.dataset.key = '__selector'
+
+  return selector
+}
+
+const createTemplate = ( itemEl: HTMLElement, id: string ) => {
+  const template = document.createElement( 'template' )
+
+  itemEl.classList.add( 'select-child' )
+  template.content.appendChild( itemEl )
+  template.id = id
+
+  return template
+}
+
+const onChange: EventListener = ( e: Event ) => {
+  if ( !( e.target instanceof HTMLElement ) ) return
+
+  const selector = <HTMLElement>e.target.closest( '.selector' )
+
+  if( !selector ) return
+
+  const selection = strictSelect( selector.parentElement!, '.selection' )
+  const templateId = strictData( selector, 'templateId' )
+
+  if ( e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement ){
+    choose( selection, templateId, e.target.value )
+
+    const radioEls = <HTMLInputElement[]>Array.from(
       selector.querySelectorAll( 'input[type="radio"]' )
     )
-    radios.forEach( ( input, i ) => {
-      input.addEventListener( 'click', e => {
-        radios.forEach( current => current.checked = current === input )
-        choose( i )
-      } )
 
-      if ( i === 0 ) input.checked = true
-      choose( 0 )
-    } )
+    radioEls.forEach( radioEl => {
+      radioEl.checked = radioEl === e.target
+    })
+  }
+}
 
-    const select = <HTMLSelectElement|null>inclusiveSelect( selector, 'select' )
-    if ( select ) {
-      select.onchange = () => {
-        const i = select.selectedIndex
-        choose( i )
-      }
+const choose = ( selection: HTMLElement, id: string, key: string ) => {
+  selection.innerHTML = ''
 
-      choose( 0 )
-    }
-  } )
+  const template = <HTMLTemplateElement>strictSelect(
+    document, `#${ id }__${ key }`
+  )
+
+  const fragment = <DocumentFragment>template.content.cloneNode( true )
+  selection.appendChild( fragment )
+
+  nameDecorator( selection )
+  onMutate( selection )
 }

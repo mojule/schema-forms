@@ -25,13 +25,20 @@ export const EnumEditor: TemplateFactory = ( document: Document ) => {
   const radioEditor = ( { schema }: SchemaMetaData ) => {
     const container = div( { data: { enumType: 'radio' } } )
 
-    schema.enum!.forEach( ( value, i ) => {
-      value = String( value )
+    schema.enum!.forEach( ( enumValue, i ) => {
+      const title: string = (
+        schema._esTitles ?
+        schema._esTitles[ i ] :
+        String( enumValue )
+      )
 
-      const title = schema._esTitles ? schema._esTitles[ i ] : value
-      const attributes: any = { type: 'radio', value, title }
+      const attributes: any = {
+        type: 'radio',
+        value: String( enumValue ),
+        title
+      }
 
-      if ( value === schema.default ) {
+      if ( enumValue === schema.default ) {
         attributes.checked = ''
       }
 
@@ -54,13 +61,16 @@ export const EnumEditor: TemplateFactory = ( document: Document ) => {
 
     const element = select( attributes )
 
-    schema.enum!.forEach( ( value, i ) => {
-      value = String( value )
+    schema.enum!.forEach( ( enumValue, i ) => {
+      const title: string = (
+        schema._esTitles ?
+          schema._esTitles[ i ] :
+          String( enumValue )
+      )
 
-      const title = schema._esTitles ? schema._esTitles[ i ] : value
-      const optionAttributes: any = { value }
+      const optionAttributes: any = { value: String( enumValue ) }
 
-      if( value === schema.default ){
+      if( enumValue === schema.default ){
         optionAttributes.selected = ''
       }
 

@@ -2,14 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const get_form_element_1 = require("./get-form-element");
-exports.AddSchema = (parentMap, fragment, templates, decorators) => {
+exports.AddSchema = (parentMap, rootElement, templates, decorators) => {
     const { container, editor } = templates;
     const { fieldsetDecorator, labelDecorator, nameDecorator } = decorators;
     const getFormElement = get_form_element_1.GetFormElement(templates);
     const addSchema = (meta) => {
         const { schema, parentSchema } = meta;
         const parentElement = parentSchema && parentMap.has(parentSchema) ?
-            parentMap.get(parentSchema) : fragment;
+            parentMap.get(parentSchema) : rootElement;
         let element;
         let isFieldset = false;
         if (utils_1.isContainer(meta)) {

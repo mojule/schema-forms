@@ -19,4 +19,24 @@ exports.isRequired = (meta) => {
         return true;
     return false;
 };
+exports.pointerToSelector = (pointer) => pointer.replace(/\//g, '__');
+exports.strictSelect = (el, selector) => {
+    const result = el.querySelector(selector);
+    if (!result)
+        throw Error(`Expected ${selector}`);
+    return result;
+};
+exports.strictData = (el, key) => {
+    const result = el.dataset[key];
+    if (!result)
+        throw Error(`Expected dataset[ '${key}' ]`);
+    return result;
+};
+exports.strictClosest = (el, selector) => {
+    const result = el.closest(selector);
+    if (!result)
+        throw Error(`Expected ${selector}`);
+    return result;
+};
+exports.randomId = () => '_' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(36);
 //# sourceMappingURL=utils.js.map

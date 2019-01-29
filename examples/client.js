@@ -1041,64 +1041,103 @@ function hasOwnProperty(obj, prop) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const on_mutate_1 = require("./on-mutate");
 const name_decorator_1 = require("../decorators/name-decorator");
+const utils_1 = require("../utils");
 exports.arrayify = (element) => {
+    const rootElement = utils_1.strictClosest(element, '[data-root]');
+    rootElement.addEventListener('click', onAdd);
+    rootElement.addEventListener('click', onDelete);
     const arrayEls = Array.from(element.querySelectorAll('[data-type="array"]'));
     arrayEls.forEach(arrayEl => {
         const itemEl = arrayEl.firstElementChild;
-        if (!itemEl)
+        if (!itemEl || itemEl.classList.contains('array-children'))
             return;
+        const name = name_decorator_1.getName(arrayEl);
+        const id = utils_1.pointerToSelector(name) + '--array';
         const title = arrayEl.dataset.title || 'Array';
-        const template = document.createElement('template');
-        const ol = document.createElement('ol');
-        const li = document.createElement('li');
-        li.appendChild(itemEl);
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.innerText = `Delete ${title}`;
-        deleteButton.classList.add('action-delete');
-        li.appendChild(deleteButton);
-        template.content.appendChild(li.cloneNode(true));
+        if (!rootElement.querySelector(`template#${id}`)) {
+            const template = createTemplate(itemEl, title, id);
+            rootElement.appendChild(template);
+        }
+        const ol = createArrayChildrenList(id);
+        const addButton = createAddButton(title, id);
         arrayEl.appendChild(ol);
-        arrayEl.appendChild(template);
-        const addButton = document.createElement('button');
-        addButton.type = 'button';
-        addButton.innerText = `Add ${title}`;
-        addButton.onclick = e => {
-            e.preventDefault();
-            const fragment = template.content.cloneNode(true);
-            const li = fragment.querySelector('li');
-            ol.appendChild(li);
-            setKeys(ol);
-            on_mutate_1.onMutate(li);
-        };
         arrayEl.appendChild(addButton);
     });
-    const deleteButtons = Array.from(document.querySelectorAll('button.action-delete'));
-    deleteButtons.forEach(button => {
-        button.onclick = e => {
-            e.preventDefault();
-            const li = button.closest('li');
-            const ol = li.closest('ol');
-            li.remove();
-            setKeys(ol);
-            on_mutate_1.onMutate(ol);
-        };
-    });
     name_decorator_1.nameDecorator(element);
+};
+const createArrayChildrenList = (id) => {
+    const ol = document.createElement('ol');
+    ol.classList.add('array-children');
+    ol.dataset.templateId = id;
+    return ol;
+};
+const createTemplate = (itemEl, title, id) => {
+    const template = document.createElement('template');
+    template.id = id;
+    const li = document.createElement('li');
+    li.appendChild(itemEl);
+    const deleteButton = createDeleteButton(title);
+    li.appendChild(deleteButton);
+    template.content.appendChild(li.cloneNode(true));
+    return template;
+};
+const createAddButton = (title, id) => {
+    const addButton = document.createElement('button');
+    addButton.type = 'button';
+    addButton.innerText = `Add ${title}`;
+    addButton.dataset.action = 'add-array-item';
+    addButton.dataset.templateId = id;
+    return addButton;
+};
+const createDeleteButton = (title) => {
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.innerText = `Delete ${title}`;
+    deleteButton.dataset.action = 'delete-array-item';
+    return deleteButton;
 };
 const setKeys = (ol) => {
     const children = Array.from(ol.children);
     children.forEach((child, index) => child.dataset.key = String(index));
 };
+const onAdd = (e) => {
+    if (!(e.target instanceof HTMLElement))
+        return;
+    if (e.target.dataset.action !== 'add-array-item')
+        return;
+    e.preventDefault();
+    const templateId = utils_1.strictData(e.target, 'templateId');
+    const templateSelector = `template#${templateId}`;
+    const olSelector = `ol[data-template-id="${templateId}"]`;
+    const template = utils_1.strictSelect(document, templateSelector);
+    const ol = utils_1.strictSelect(document, olSelector);
+    const fragment = template.content.cloneNode(true);
+    const li = utils_1.strictSelect(fragment, 'li');
+    ol.appendChild(li);
+    setKeys(ol);
+    on_mutate_1.onMutate(li);
+};
+const onDelete = (e) => {
+    if (!(e.target instanceof HTMLElement))
+        return;
+    if (e.target.dataset.action !== 'delete-array-item')
+        return;
+    e.preventDefault();
+    const li = e.target.closest('li');
+    const ol = li.closest('ol');
+    li.remove();
+    setKeys(ol);
+    on_mutate_1.onMutate(ol);
+};
 
-},{"../decorators/name-decorator":12,"./on-mutate":8}],8:[function(require,module,exports){
+},{"../decorators/name-decorator":12,"../utils":16,"./on-mutate":8}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const arrayify_1 = require("./arrayify");
 const selectify_1 = require("./selectify");
 exports.onMutate = (element) => {
-    selectify_1.selectify(element);
     arrayify_1.arrayify(element);
+    selectify_1.selectify(element);
 };
 
 },{"./arrayify":7,"./selectify":9}],9:[function(require,module,exports){
@@ -1112,67 +1151,91 @@ const utils_1 = require("../utils");
 const enumEditor = enum_1.EnumEditor(document);
 const labelDecorator = label_decorator_1.LabelDecorator(document);
 exports.selectify = (element) => {
+    const rootElement = utils_1.strictClosest(element, '[data-root]');
+    rootElement.addEventListener('change', onChange);
     const selectableEls = Array.from(element.querySelectorAll('[data-one-of], [data-any-of]'));
     selectableEls.forEach(selectableEl => {
         const itemEls = Array.from(selectableEl.children);
-        if (itemEls.length === 0)
+        if (itemEls.length === 0 ||
+            itemEls.some(el => el.classList.contains('selection')))
             return;
-        const titles = itemEls.map((el, i) => {
-            const titleEl = utils_1.inclusiveSelect(el, '[data-title]');
-            return titleEl.dataset.title || String(i + 1);
-        });
-        const selectorEnum = {
-            title: selectableEl.dataset.title || 'One Of',
-            type: 'string',
-            enum: titles
-        };
-        const selector = enumEditor({
-            schema: selectorEnum,
-            pointer: '',
-            root: selectorEnum
-        });
-        selector.classList.add('selector');
+        const name = name_decorator_1.getName(selectableEl);
+        const id = utils_1.pointerToSelector(name);
+        const selector = createSelector(selectableEl, itemEls, id);
         selectableEl.appendChild(selector);
         labelDecorator(selector);
+        const selection = createSelection(id);
+        selectableEl.appendChild(selection);
         itemEls.forEach((itemEl, i) => {
-            delete itemEl.dataset.key;
-            const template = document.createElement('template');
-            template.dataset.index = String(i);
-            template.content.appendChild(itemEl);
-            selectableEl.appendChild(template);
+            const keyEl = utils_1.inclusiveSelect(itemEl, '[data-key]');
+            if (!keyEl)
+                throw Error(`Expected [data-key]`);
+            delete keyEl.dataset.key;
+            const itemId = `${id}__${i}`;
+            const template = createTemplate(itemEl, itemId);
+            rootElement.appendChild(template);
         });
-        const choose = (index) => {
-            const existing = Array.from(selectableEl.children);
-            existing.forEach(el => {
-                if (el !== selector && el.localName !== 'template')
-                    el.remove();
-            });
-            const template = selectableEl.querySelector(`template[data-index="${index}"]`);
-            const el = template.content.cloneNode(true);
-            selectableEl.appendChild(el);
-            name_decorator_1.nameDecorator(selectableEl);
-            on_mutate_1.onMutate(selectableEl);
-        };
-        // could be either radios or select
-        const radios = Array.from(selector.querySelectorAll('input[type="radio"]'));
-        radios.forEach((input, i) => {
-            input.addEventListener('click', e => {
-                radios.forEach(current => current.checked = current === input);
-                choose(i);
-            });
-            if (i === 0)
-                input.checked = true;
-            choose(0);
-        });
-        const select = utils_1.inclusiveSelect(selector, 'select');
-        if (select) {
-            select.onchange = () => {
-                const i = select.selectedIndex;
-                choose(i);
-            };
-            choose(0);
-        }
+        choose(selection, id, '0');
     });
+};
+const createSelection = (id) => {
+    const selection = document.createElement('div');
+    selection.classList.add('selection');
+    selection.id = id + '__selection';
+    return selection;
+};
+const createSelector = (selectableEl, itemEls, id) => {
+    const titles = itemEls.map((el, i) => {
+        const titleEl = utils_1.inclusiveSelect(el, '[data-title]');
+        return titleEl.dataset.title || String(i + 1);
+    });
+    const selectorEnum = {
+        title: selectableEl.dataset.title || 'One Of',
+        type: 'number',
+        enum: Array.from(titles.keys()),
+        default: 0
+    };
+    selectorEnum['_esTitles'] = titles;
+    const selector = enumEditor({
+        schema: selectorEnum,
+        pointer: '',
+        root: selectorEnum
+    });
+    selector.classList.add('selector');
+    selector.dataset.templateId = id;
+    selector.dataset.key = '__selector';
+    return selector;
+};
+const createTemplate = (itemEl, id) => {
+    const template = document.createElement('template');
+    itemEl.classList.add('select-child');
+    template.content.appendChild(itemEl);
+    template.id = id;
+    return template;
+};
+const onChange = (e) => {
+    if (!(e.target instanceof HTMLElement))
+        return;
+    const selector = e.target.closest('.selector');
+    if (!selector)
+        return;
+    const selection = utils_1.strictSelect(selector.parentElement, '.selection');
+    const templateId = utils_1.strictData(selector, 'templateId');
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) {
+        choose(selection, templateId, e.target.value);
+        const radioEls = Array.from(selector.querySelectorAll('input[type="radio"]'));
+        radioEls.forEach(radioEl => {
+            radioEl.checked = radioEl === e.target;
+        });
+    }
+};
+const choose = (selection, id, key) => {
+    selection.innerHTML = '';
+    const template = utils_1.strictSelect(document, `#${id}__${key}`);
+    const fragment = template.content.cloneNode(true);
+    selection.appendChild(fragment);
+    name_decorator_1.nameDecorator(selection);
+    on_mutate_1.onMutate(selection);
 };
 
 },{"../decorators/label-decorator":11,"../decorators/name-decorator":12,"../templates/enum":15,"../utils":16,"./on-mutate":8}],10:[function(require,module,exports){
@@ -1251,7 +1314,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const entries = Array.from(formData.entries()).map(([key, value]) => [key, String(value)]);
         console.log(entries);
     };
-    on_mutate_1.onMutate(form);
+    const root = document.querySelector('[data-root]');
+    if (!root)
+        throw Error('Could not find [data-root]');
+    on_mutate_1.onMutate(root);
 });
 
 },{"../client/on-mutate":8,"../get-data":14}],14:[function(require,module,exports){
@@ -1334,11 +1400,16 @@ exports.EnumEditor = (document) => {
     };
     const radioEditor = ({ schema }) => {
         const container = div({ data: { enumType: 'radio' } });
-        schema.enum.forEach((value, i) => {
-            value = String(value);
-            const title = schema._esTitles ? schema._esTitles[i] : value;
-            const attributes = { type: 'radio', value, title };
-            if (value === schema.default) {
+        schema.enum.forEach((enumValue, i) => {
+            const title = (schema._esTitles ?
+                schema._esTitles[i] :
+                String(enumValue));
+            const attributes = {
+                type: 'radio',
+                value: String(enumValue),
+                title
+            };
+            if (enumValue === schema.default) {
                 attributes.checked = '';
             }
             const radio = input(attributes);
@@ -1354,11 +1425,12 @@ exports.EnumEditor = (document) => {
         if (utils_1.isRequired(meta))
             attributes.required = '';
         const element = select(attributes);
-        schema.enum.forEach((value, i) => {
-            value = String(value);
-            const title = schema._esTitles ? schema._esTitles[i] : value;
-            const optionAttributes = { value };
-            if (value === schema.default) {
+        schema.enum.forEach((enumValue, i) => {
+            const title = (schema._esTitles ?
+                schema._esTitles[i] :
+                String(enumValue));
+            const optionAttributes = { value: String(enumValue) };
+            if (enumValue === schema.default) {
                 optionAttributes.selected = '';
             }
             const item = option(optionAttributes, title);
@@ -1391,6 +1463,26 @@ exports.isRequired = (meta) => {
         return true;
     return false;
 };
+exports.pointerToSelector = (pointer) => pointer.replace(/\//g, '__');
+exports.strictSelect = (el, selector) => {
+    const result = el.querySelector(selector);
+    if (!result)
+        throw Error(`Expected ${selector}`);
+    return result;
+};
+exports.strictData = (el, key) => {
+    const result = el.dataset[key];
+    if (!result)
+        throw Error(`Expected dataset[ '${key}' ]`);
+    return result;
+};
+exports.strictClosest = (el, selector) => {
+    const result = el.closest(selector);
+    if (!result)
+        throw Error(`Expected ${selector}`);
+    return result;
+};
+exports.randomId = () => '_' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(36);
 
 },{}],17:[function(require,module,exports){
 'use strict'

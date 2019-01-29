@@ -23,5 +23,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
     console.log( entries )
   }
 
-  onMutate( form )
+  const root = <HTMLElement>document.querySelector( '[data-root]' )
+
+  if ( !root ) throw Error( 'Could not find [data-root]' )
+
+  onMutate( root )
 } )

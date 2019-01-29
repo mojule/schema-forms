@@ -7,4 +7,4 @@ export declare const schemaToDom: (schema: JSONSchema4, document: Document, temp
     enumEditor: import("../types").Template;
     numberEditor: import("../types").Template;
     stringEditor: import("../types").Template;
-}) => DocumentFragment;
+}) => HTMLDivElement;

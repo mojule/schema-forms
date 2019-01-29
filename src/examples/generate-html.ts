@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom'
 import { promises } from 'fs'
 import { schemaToDom } from '../schema-to-dom'
-import { all } from '../test/fixtures'
+import { all } from './schema'
 
 const { writeFile } = promises
 
@@ -24,9 +24,9 @@ const { document } = jsdom.window
 const start = async () => {
   try {
     const formEl = document.querySelector( 'form' )!
-    const fragment = schemaToDom( all, document )
+    const schemaDom = schemaToDom( all, document )
 
-    formEl.appendChild( fragment )
+    formEl.appendChild( schemaDom )
 
     const submit = document.createElement( 'input' )
     submit.type = 'submit'

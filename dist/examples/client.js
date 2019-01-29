@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const entries = Array.from(formData.entries()).map(([key, value]) => [key, String(value)]);
         console.log(entries);
     };
-    on_mutate_1.onMutate(form);
+    const root = document.querySelector('[data-root]');
+    if (!root)
+        throw Error('Could not find [data-root]');
+    on_mutate_1.onMutate(root);
 });
 //# sourceMappingURL=client.js.map

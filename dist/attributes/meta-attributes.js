@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.metaAttributes = (meta) => {
-    const { schema, keyIndex } = meta;
+    const { schema, keyIndex, pointer } = meta;
     const { id, title } = schema;
     let type = schema.type;
     if (type === 'array' && Array.isArray(schema.items))
         type = 'tuple';
-    const data = { title };
+    const data = { title, pointer };
     if (type)
         data.type = type;
     if (id)

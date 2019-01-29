@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const allJson = require("./all.schema.json");
+//import * as allJson from './all.schema.json'
+const allJson = require("./arrays.schema.json");
 exports.all = allJson;
 //# sourceMappingURL=index.js.map

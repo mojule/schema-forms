@@ -18,11 +18,16 @@ exports.EnumEditor = (document) => {
     };
     const radioEditor = ({ schema }) => {
         const container = div({ data: { enumType: 'radio' } });
-        schema.enum.forEach((value, i) => {
-            value = String(value);
-            const title = schema._esTitles ? schema._esTitles[i] : value;
-            const attributes = { type: 'radio', value, title };
-            if (value === schema.default) {
+        schema.enum.forEach((enumValue, i) => {
+            const title = (schema._esTitles ?
+                schema._esTitles[i] :
+                String(enumValue));
+            const attributes = {
+                type: 'radio',
+                value: String(enumValue),
+                title
+            };
+            if (enumValue === schema.default) {
                 attributes.checked = '';
             }
             const radio = input(attributes);
@@ -38,11 +43,12 @@ exports.EnumEditor = (document) => {
         if (utils_1.isRequired(meta))
             attributes.required = '';
         const element = select(attributes);
-        schema.enum.forEach((value, i) => {
-            value = String(value);
-            const title = schema._esTitles ? schema._esTitles[i] : value;
-            const optionAttributes = { value };
-            if (value === schema.default) {
+        schema.enum.forEach((enumValue, i) => {
+            const title = (schema._esTitles ?
+                schema._esTitles[i] :
+                String(enumValue));
+            const optionAttributes = { value: String(enumValue) };
+            if (enumValue === schema.default) {
                 optionAttributes.selected = '';
             }
             const item = option(optionAttributes, title);
