@@ -7,7 +7,9 @@ import * as data from './data'
 import { populateSchema } from '../populate-schema';
 
 document.addEventListener( 'DOMContentLoaded', () => {
-  const { form, submit, select, schema, schemaSubmit, result } = init()
+  const {
+    form, submit, select, schema, schemaSubmit, result, resultSubmit
+  } = init()
 
   submit.onclick = e => {
     e.preventDefault()
@@ -21,10 +23,16 @@ document.addEventListener( 'DOMContentLoaded', () => {
     onSchemaSubmit()
   }
 
+  resultSubmit.onclick = e => {
+    e.preventDefault()
+
+    onResultSubmit()
+  }
+
   const onSubmit = () => {
     const value = getData( form )
 
-    result.innerText = JSON.stringify( value, null, 2 )
+    result.value = JSON.stringify( value, null, 2 )
 
     const formData = new FormData( form )
 
@@ -64,6 +72,17 @@ document.addEventListener( 'DOMContentLoaded', () => {
     onSubmit()
   }
 
+  const onResultSubmit = () => {
+    const resultValue = JSON.parse( result.value )
+    let currentSchema = JSON.parse( schema.value )
+
+    currentSchema = populateSchema( resultValue, currentSchema )
+
+    schema.value = JSON.stringify( currentSchema, null, 2 )
+
+    onSchemaSubmit()
+  }
+
   select.onchange = onSelect
 
   onSelect()
@@ -78,9 +97,10 @@ const init = () => {
     '.schema textarea'
   )
   const schemaSubmit = createSchemaButton()
-  const result = <HTMLPreElement>document.querySelector( '.result pre' )
+  const result = <HTMLTextAreaElement>document.querySelector( '.result textarea' )
+  const resultSubmit = createResultButton()
 
-  return { form, submit, select, schema, schemaSubmit, result }
+  return { form, submit, select, schema, schemaSubmit, result, resultSubmit }
 }
 
 const createForm = () => {
@@ -96,7 +116,7 @@ const createFormButton = () => {
   const formButtonContainer = document.querySelector( '.form-button' )!
   const submit = document.createElement( 'input' )
   submit.type = 'submit'
-  submit.value = 'View Result'
+  submit.value = 'Update Results'
 
   formButtonContainer.appendChild( submit )
 
@@ -107,11 +127,22 @@ const createSchemaButton = () => {
   const schemaButtonContainer = document.querySelector( '.schema-button' )!
   const schemaSubmit = document.createElement( 'input' )
   schemaSubmit.type = 'submit'
-  schemaSubmit.value = 'Create Form'
+  schemaSubmit.value = 'Update Form'
 
   schemaButtonContainer.appendChild( schemaSubmit )
 
   return schemaSubmit
+}
+
+const createResultButton = () => {
+  const resultButtonContainer = document.querySelector( '.result-button' )!
+  const resultSubmit = document.createElement( 'input' )
+  resultSubmit.type = 'submit'
+  resultSubmit.value = 'Update Schema Defaults'
+
+  resultButtonContainer.appendChild( resultSubmit )
+
+  return resultSubmit
 }
 
 const createSelect = () => {

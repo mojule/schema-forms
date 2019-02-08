@@ -7,7 +7,7 @@ const schemas = require("./schema");
 const data = require("./data");
 const populate_schema_1 = require("../populate-schema");
 document.addEventListener('DOMContentLoaded', () => {
-    const { form, submit, select, schema, schemaSubmit, result } = init();
+    const { form, submit, select, schema, schemaSubmit, result, resultSubmit } = init();
     submit.onclick = e => {
         e.preventDefault();
         onSubmit();
@@ -16,9 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         onSchemaSubmit();
     };
+    resultSubmit.onclick = e => {
+        e.preventDefault();
+        onResultSubmit();
+    };
     const onSubmit = () => {
         const value = get_data_1.getData(form);
-        result.innerText = JSON.stringify(value, null, 2);
+        result.value = JSON.stringify(value, null, 2);
         const formData = new FormData(form);
         const entries = Array.from(formData.entries()).map(([key, value]) => [key, String(value)]);
         console.log(entries);
@@ -43,6 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
         on_mutate_1.onMutate(root);
         onSubmit();
     };
+    const onResultSubmit = () => {
+        const resultValue = JSON.parse(result.value);
+        let currentSchema = JSON.parse(schema.value);
+        currentSchema = populate_schema_1.populateSchema(resultValue, currentSchema);
+        schema.value = JSON.stringify(currentSchema, null, 2);
+        onSchemaSubmit();
+    };
     select.onchange = onSelect;
     onSelect();
 });
@@ -52,8 +63,9 @@ const init = () => {
     const select = createSelect();
     const schema = document.querySelector('.schema textarea');
     const schemaSubmit = createSchemaButton();
-    const result = document.querySelector('.result pre');
-    return { form, submit, select, schema, schemaSubmit, result };
+    const result = document.querySelector('.result textarea');
+    const resultSubmit = createResultButton();
+    return { form, submit, select, schema, schemaSubmit, result, resultSubmit };
 };
 const createForm = () => {
     const formContainer = document.querySelector('.form');
@@ -65,7 +77,7 @@ const createFormButton = () => {
     const formButtonContainer = document.querySelector('.form-button');
     const submit = document.createElement('input');
     submit.type = 'submit';
-    submit.value = 'View Result';
+    submit.value = 'Update Results';
     formButtonContainer.appendChild(submit);
     return submit;
 };
@@ -73,9 +85,17 @@ const createSchemaButton = () => {
     const schemaButtonContainer = document.querySelector('.schema-button');
     const schemaSubmit = document.createElement('input');
     schemaSubmit.type = 'submit';
-    schemaSubmit.value = 'Create Form';
+    schemaSubmit.value = 'Update Form';
     schemaButtonContainer.appendChild(schemaSubmit);
     return schemaSubmit;
+};
+const createResultButton = () => {
+    const resultButtonContainer = document.querySelector('.result-button');
+    const resultSubmit = document.createElement('input');
+    resultSubmit.type = 'submit';
+    resultSubmit.value = 'Update Schema Defaults';
+    resultButtonContainer.appendChild(resultSubmit);
+    return resultSubmit;
 };
 const createSelect = () => {
     const select = document.querySelector('header select');
