@@ -1,0 +1,11 @@
+{
+  "id": "http://workingspec.com/schema/data",
+  "title": "Data",
+  "type": "object",
+  "properties": {
+    "foo": {
+      "title": "Foo",
+      "type": "string"
+    }
+  }
+}
