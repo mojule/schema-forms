@@ -61,6 +61,8 @@ export const EnumEditor: TemplateFactory = ( document: Document ) => {
 
     const element = select( attributes )
 
+    if( !isRequired( meta ) ) element.appendChild( option() )
+
     schema.enum!.forEach( ( enumValue, i ) => {
       const title: string = (
         schema._esTitles ?

@@ -23,8 +23,8 @@ export const populateSchema = ( value: any, schema: JSONSchema4 ) => {
   }
 
   const onSchema: TraverseCallback = (
-    schema: JSONSchema4, pointer: string, root: JSONSchema4,
-    parentPointer?: string, parentKeyword?: string,
+    schema: JSONSchema4, _pointer: string, _root: JSONSchema4,
+    _parentPointer?: string, _parentKeyword?: string,
     parentSchema?: JSONSchema4, keyIndex?: string | number
   ) => {
     if( parentSchema ){

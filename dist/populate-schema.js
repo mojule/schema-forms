@@ -13,7 +13,7 @@ exports.populateSchema = (value, schema) => {
             return getPointer(parent) + '/' + path;
         return path;
     };
-    const onSchema = (schema, pointer, root, parentPointer, parentKeyword, parentSchema, keyIndex) => {
+    const onSchema = (schema, _pointer, _root, _parentPointer, _parentKeyword, parentSchema, keyIndex) => {
         if (parentSchema) {
             parentMap.set(schema, parentSchema);
         }

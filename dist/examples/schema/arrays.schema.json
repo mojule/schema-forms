@@ -25,129 +25,53 @@
                 "type": "integer"
             }
         },
-        "complex": {
-            "title": "Complex",
-            "type": "object",
-            "properties": {
-                "object": {
-                    "title": "Object",
-                    "type": "object",
-                    "properties": {
-                        "foo": {
-                            "title": "Foo",
-                            "type": "string"
-                        },
-                        "bar": {
-                            "title": "Bar",
-                            "type": "number"
-                        }
-                    }
-                },
-                "array": {
-                    "title": "Array",
-                    "type": "array",
-                    "items": {
-                        "title": "Object",
-                        "type": "object",
-                        "properties": {
-                            "foo": {
-                                "title": "Foo",
-                                "type": "string"
-                            },
-                            "bar": {
-                                "title": "Bar Array",
-                                "type": "array",
-                                "items": {
-                                    "title": "Bar Value",
-                                    "type": "number"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "oneOf": {
-            "title": "One Of",
-            "oneOf": [
-                {
-                    "title": "oneOf is a string",
-                    "type": "string",
-                    "default": "Foo"
-                },
-                {
-                    "title": "oneOf is a number",
-                    "type": "number",
-                    "default": 1
-                }
-            ]
-        },
-        "arrayOfOneOf": {
-            "title": "Array of One Of",
+        "array-defaults": {
+            "title": "Array with Defaults",
             "type": "array",
             "items": {
-                "title": "One Of in Array",
-                "oneOf": [
-                    {
-                        "title": "oneOf is a string",
-                        "type": "string",
-                        "default": "Foo"
-                    },
-                    {
-                        "title": "oneOf is a number",
-                        "type": "number",
-                        "default": 1
-                    }
-                ]
+                "title": "Value",
+                "type": "integer"
             }
         },
-        "anyOf": {
-            "title": "Any Of",
-            "anyOf": [
-                {
-                    "title": "anyOf1 is a string",
-                    "type": "string",
-                    "default": "Bar"
-                },
-                {
-                    "title": "anyOf2 is a number",
-                    "type": "number",
-                    "default": 2
-                },
-                {
-                    "title": "anyOf3 is a string",
-                    "type": "string",
-                    "default": "Qux"
-                },
-                {
-                    "title": "anyOf4 is a number",
-                    "type": "number",
-                    "default": 3
-                },
-                {
-                    "title": "anyOf5 is a string",
-                    "type": "string",
-                    "default": "Unh"
-                },
-                {
-                    "title": "anyOf6 is a number",
-                    "type": "number",
-                    "default": 4
-                },
-                {
-                    "title": "anyOf7 is a string",
-                    "type": "string",
-                    "default": "Prrr"
-                },
-                {
-                    "title": "anyOf8 is an array",
-                    "type": "array",
-                    "items": {
-                        "title": "anyof8 number",
-                        "type": "number"
-                    }
+        "array-min": {
+            "title": "Array with minItems",
+            "type": "array",
+            "items": {
+                "title": "Value",
+                "type": "integer"
+            },
+            "minItems": 2
+        },
+        "array-max": {
+            "title": "Array with maxItems",
+            "type": "array",
+            "items": {
+                "title": "Value",
+                "type": "integer"
+            },
+            "maxItems": 4
+        },
+        "array-min-max": {
+            "title": "Array with minItems and maxItems",
+            "type": "array",
+            "items": {
+                "title": "Value",
+                "type": "integer"
+            },
+            "minItems": 2,
+            "maxItems": 4
+        },
+        "nested": {
+            "title": "Nested",
+            "type": "array",
+            "items": {
+                "title": "Inner Array",
+                "type": "array",
+                "items": {
+                    "title": "Value",
+                    "type": "integer"
                 }
-            ]
+            }
         }
     }
 }

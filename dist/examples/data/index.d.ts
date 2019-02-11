@@ -14,3 +14,10 @@ export declare const tasks: {
         "done": boolean;
     }[];
 };
+export declare const enums: {
+    "string-short-list-default": string;
+    "string-long-list-default": string;
+};
+export declare const arrays: {
+    "array-defaults": number[];
+};

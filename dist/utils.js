@@ -39,4 +39,7 @@ exports.strictClosest = (el, selector) => {
     return result;
 };
 exports.randomId = () => '_' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(36);
+exports.isCheckbox = (el) => el.matches('input[type="checkbox"]');
+exports.isInput = (el) => el.localName === 'input';
+exports.isInputOrTextarea = (el) => exports.isInput(el) || el.localName === 'textarea';
 //# sourceMappingURL=utils.js.map

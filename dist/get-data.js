@@ -32,9 +32,17 @@ exports.getData = (parent) => {
             const input = namedElement;
             if (!input.willValidate)
                 return;
-            if (input.type === 'checkbox' || input.type === 'radio') {
+            if (input.type === 'checkbox') {
                 if (input.checked)
                     value = true;
+            }
+            else if (input.type === 'radio') {
+                if (input.checked) {
+                    value = input.value;
+                }
+                else {
+                    return;
+                }
             }
             else {
                 value = input.value;

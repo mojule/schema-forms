@@ -40,8 +40,14 @@ export const getData = ( parent: ParentNode ) => {
 
       if ( !input.willValidate ) return
 
-      if ( input.type === 'checkbox' || input.type === 'radio' ) {
+      if ( input.type === 'checkbox' ) {
         if( input.checked ) value = true
+      } else if( input.type === 'radio' ) {
+        if ( input.checked ){
+          value = input.value
+        } else {
+          return
+        }
       } else {
         value = input.value
       }

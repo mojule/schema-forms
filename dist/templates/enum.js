@@ -43,6 +43,8 @@ exports.EnumEditor = (document) => {
         if (utils_1.isRequired(meta))
             attributes.required = '';
         const element = select(attributes);
+        if (!utils_1.isRequired(meta))
+            element.appendChild(option());
         schema.enum.forEach((enumValue, i) => {
             const title = (schema._esTitles ?
                 schema._esTitles[i] :

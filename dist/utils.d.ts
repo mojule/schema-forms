@@ -8,3 +8,6 @@ export declare const strictSelect: (el: ParentNode, selector: string) => HTMLEle
 export declare const strictData: (el: HTMLElement, key: string) => string;
 export declare const strictClosest: (el: HTMLElement, selector: string) => HTMLElement;
 export declare const randomId: () => string;
+export declare const isCheckbox: (el: HTMLElement) => el is HTMLInputElement;
+export declare const isInput: (el: HTMLElement) => el is HTMLInputElement;
+export declare const isInputOrTextarea: (el: HTMLElement) => el is HTMLInputElement | HTMLTextAreaElement;
