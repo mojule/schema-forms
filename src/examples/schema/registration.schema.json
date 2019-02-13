@@ -1,6 +1,6 @@
 {
-  "title": "A registration form",
-  "description": "A simple form example.",
+  "title": "Registration form",
+  "description": "A simple registration form.",
   "type": "object",
   "properties": {
     "firstName": {
@@ -34,6 +34,7 @@
   },
   "required": [
     "firstName",
-    "lastName"
+    "lastName",
+    "password"
   ]
 }

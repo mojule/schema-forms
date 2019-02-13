@@ -1,20 +1,41 @@
+import * as Ajv from 'ajv'
 import { getData } from '../get-data'
 import { onMutate } from '../client/on-mutate'
 import { schemaToDom } from '../schema-to-dom'
 
 import * as schemas from './schema'
 import * as data from './data'
-import { populateSchema } from '../populate-schema';
+import { populateSchema } from '../populate-schema'
+import { JSONSchema4 } from 'json-schema'
+
+const valid = '✔️'
+const invalid = '❌'
+const unknown = '❓'
+
+const ajv = new Ajv({
+  schemaId: 'id',
+  allErrors: true,
+  jsonPointers: true
+})
+
+ajv.addMetaSchema( schemas.meta )
+
+ajv.addFormat( 'multiline', () => true )
+ajv.addFormat( 'password', () => true )
+ajv.addFormat( 'tel', () => true )
+ajv.addFormat( 'color', /^\#[a-f0-9]{6}$/ )
+ajv.addFormat( 'month', /^\d{4}-\d{2}$/ )
 
 document.addEventListener( 'DOMContentLoaded', () => {
   const {
-    form, submit, select, schema, schemaSubmit, result, resultSubmit
+    form, submit, select, schema, schemaSubmit, result, resultSubmit,
+    schemaValid, formValid, resultValid
   } = init()
 
   submit.onclick = e => {
     e.preventDefault()
 
-    onSubmit()
+    onFormSubmit()
   }
 
   schemaSubmit.onclick = e => {
@@ -29,7 +50,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
     onResultSubmit()
   }
 
-  const onSubmit = () => {
+  const onFormSubmit = () => {
     const value = getData( form )
 
     result.value = JSON.stringify( value, null, 2 )
@@ -41,6 +62,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
     ).map( ( [ key, value ] ) => [ key, String( value ) ] )
 
     console.log( entries )
+
+    const isValid = isResultValid()
+
+    resultValid.innerText = isValid ? valid : invalid
   }
 
   const onSelect = () => {
@@ -52,6 +77,26 @@ document.addEventListener( 'DOMContentLoaded', () => {
     }
 
     schema.value = JSON.stringify( currentSchema, null, 2 )
+    form.innerHTML = ''
+    result.value = ''
+
+    onSchemaChange()
+  }
+
+  const onSchemaChange = () => {
+    const isValid = isSchemaValid()
+
+    schemaValid.innerText = isValid ? valid : invalid
+
+    if ( !isValid ) {
+      form.innerHTML = ''
+      result.value = ''
+
+      formValid.innerText = unknown
+      resultValid.innerText = unknown
+
+      return
+    }
 
     onSchemaSubmit()
   }
@@ -61,6 +106,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
     const schemaDom = schemaToDom( currentSchema, document )
 
     form.innerHTML = ''
+    result.value = ''
 
     form.appendChild( schemaDom )
 
@@ -69,7 +115,29 @@ document.addEventListener( 'DOMContentLoaded', () => {
     if ( !root ) throw Error( 'Could not find [data-root]' )
 
     onMutate( root )
-    onSubmit()
+
+    onFormChange()
+  }
+
+  const onFormChange = () => {
+    const isValid = isFormValid()
+
+    formValid.innerText = isValid ? valid : invalid
+
+    if ( !isValid ) {
+      const currentFocus = <HTMLElement>document.activeElement
+
+      form.reportValidity()
+
+      if( currentFocus !== null ) currentFocus.focus()
+
+      resultValid.innerText = unknown
+      result.value = ''
+
+      return
+    }
+
+    onFormSubmit()
   }
 
   const onResultSubmit = () => {
@@ -83,11 +151,71 @@ document.addEventListener( 'DOMContentLoaded', () => {
     onSchemaSubmit()
   }
 
+  schema.oninput = onSchemaChange
+  form.oninput = onFormChange
   select.onchange = onSelect
 
   onSelect()
 } )
 
+const isSchemaValid = () => {
+  const schema = getCurrentSchema()
+
+  if( !schema ) return false
+
+  return ajv.validate( 'http://json-schema.org/draft-04/schema#', schema )
+}
+
+const isFormValid = () => {
+  const form = getForm()
+
+  if( !form ) return false
+
+  return form.checkValidity()
+}
+
+const isResultValid = () => {
+  const result = getResult()
+
+  if( !result ) return false
+
+  if( !isSchemaValid() ) return false
+
+  const currentSchema = getCurrentSchema()
+
+  if ( !currentSchema ) return false
+
+  return ajv.validate( currentSchema, result )
+}
+
+const getCurrentSchema = () => {
+  try {
+    const schema = <HTMLTextAreaElement>document.querySelector(
+      '.schema textarea'
+    )
+
+    return <JSONSchema4>JSON.parse( schema.value )
+  } catch {
+    return
+  }
+}
+
+const getForm = () => {
+  const form = <HTMLFormElement>document.querySelector( '.form form' )
+
+  if( form ) return form
+}
+
+const getResult = () => {
+  try {
+    const result = <HTMLTextAreaElement>document.querySelector( '.result textarea' )
+
+    return JSON.parse( result.value )
+  } catch {
+    return
+  }
+
+}
 
 const init = () => {
   const form = createForm()
@@ -100,7 +228,14 @@ const init = () => {
   const result = <HTMLTextAreaElement>document.querySelector( '.result textarea' )
   const resultSubmit = createResultButton()
 
-  return { form, submit, select, schema, schemaSubmit, result, resultSubmit }
+  const schemaValid = <HTMLSourceElement>document.querySelector( '.schema-valid' )
+  const formValid = <HTMLSourceElement>document.querySelector( '.form-valid' )
+  const resultValid = <HTMLSourceElement>document.querySelector( '.result-valid' )
+
+  return {
+    form, submit, select, schema, schemaSubmit, result, resultSubmit,
+    schemaValid, formValid, resultValid
+  }
 }
 
 const createForm = () => {

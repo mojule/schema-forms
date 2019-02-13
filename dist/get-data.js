@@ -48,7 +48,7 @@ exports.getData = (parent) => {
                 value = input.value;
             }
         }
-        if (value === '' && type !== 'string')
+        if (value === '' && !namedElement.matches(':required'))
             return;
         if (type === 'integer')
             value = parseInt(value, 10);

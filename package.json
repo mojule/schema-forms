@@ -29,6 +29,7 @@
   "dependencies": {
     "@entity-schema/json-schema-traverse": "^0.6.0",
     "@mojule/h": "^0.2.7",
-    "@mojule/json-pointer": "^0.3.4"
+    "@mojule/json-pointer": "^0.3.4",
+    "ajv": "^6.9.1"
   }
 }

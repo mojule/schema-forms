@@ -1,16 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Ajv = require("ajv");
 const get_data_1 = require("../get-data");
 const on_mutate_1 = require("../client/on-mutate");
 const schema_to_dom_1 = require("../schema-to-dom");
 const schemas = require("./schema");
 const data = require("./data");
 const populate_schema_1 = require("../populate-schema");
+const valid = '✔️';
+const invalid = '❌';
+const unknown = '❓';
+const ajv = new Ajv({
+    schemaId: 'id',
+    allErrors: true,
+    jsonPointers: true
+});
+ajv.addMetaSchema(schemas.meta);
+ajv.addFormat('multiline', () => true);
+ajv.addFormat('password', () => true);
+ajv.addFormat('tel', () => true);
+ajv.addFormat('color', /^\#[a-f0-9]{6}$/);
+ajv.addFormat('month', /^\d{4}-\d{2}$/);
 document.addEventListener('DOMContentLoaded', () => {
-    const { form, submit, select, schema, schemaSubmit, result, resultSubmit } = init();
+    const { form, submit, select, schema, schemaSubmit, result, resultSubmit, schemaValid, formValid, resultValid } = init();
     submit.onclick = e => {
         e.preventDefault();
-        onSubmit();
+        onFormSubmit();
     };
     schemaSubmit.onclick = e => {
         e.preventDefault();
@@ -20,12 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         onResultSubmit();
     };
-    const onSubmit = () => {
+    const onFormSubmit = () => {
         const value = get_data_1.getData(form);
         result.value = JSON.stringify(value, null, 2);
         const formData = new FormData(form);
         const entries = Array.from(formData.entries()).map(([key, value]) => [key, String(value)]);
         console.log(entries);
+        const isValid = isResultValid();
+        resultValid.innerText = isValid ? valid : invalid;
     };
     const onSelect = () => {
         const key = select.selectedOptions[0].value;
@@ -34,18 +51,47 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSchema = populate_schema_1.populateSchema(data[key], currentSchema);
         }
         schema.value = JSON.stringify(currentSchema, null, 2);
+        form.innerHTML = '';
+        result.value = '';
+        onSchemaChange();
+    };
+    const onSchemaChange = () => {
+        const isValid = isSchemaValid();
+        schemaValid.innerText = isValid ? valid : invalid;
+        if (!isValid) {
+            form.innerHTML = '';
+            result.value = '';
+            formValid.innerText = unknown;
+            resultValid.innerText = unknown;
+            return;
+        }
         onSchemaSubmit();
     };
     const onSchemaSubmit = () => {
         const currentSchema = JSON.parse(schema.value);
         const schemaDom = schema_to_dom_1.schemaToDom(currentSchema, document);
         form.innerHTML = '';
+        result.value = '';
         form.appendChild(schemaDom);
         const root = document.querySelector('[data-root]');
         if (!root)
             throw Error('Could not find [data-root]');
         on_mutate_1.onMutate(root);
-        onSubmit();
+        onFormChange();
+    };
+    const onFormChange = () => {
+        const isValid = isFormValid();
+        formValid.innerText = isValid ? valid : invalid;
+        if (!isValid) {
+            const currentFocus = document.activeElement;
+            form.reportValidity();
+            if (currentFocus !== null)
+                currentFocus.focus();
+            resultValid.innerText = unknown;
+            result.value = '';
+            return;
+        }
+        onFormSubmit();
     };
     const onResultSubmit = () => {
         const resultValue = JSON.parse(result.value);
@@ -54,9 +100,57 @@ document.addEventListener('DOMContentLoaded', () => {
         schema.value = JSON.stringify(currentSchema, null, 2);
         onSchemaSubmit();
     };
+    schema.oninput = onSchemaChange;
+    form.oninput = onFormChange;
     select.onchange = onSelect;
     onSelect();
 });
+const isSchemaValid = () => {
+    const schema = getCurrentSchema();
+    if (!schema)
+        return false;
+    return ajv.validate('http://json-schema.org/draft-04/schema#', schema);
+};
+const isFormValid = () => {
+    const form = getForm();
+    if (!form)
+        return false;
+    return form.checkValidity();
+};
+const isResultValid = () => {
+    const result = getResult();
+    if (!result)
+        return false;
+    if (!isSchemaValid())
+        return false;
+    const currentSchema = getCurrentSchema();
+    if (!currentSchema)
+        return false;
+    return ajv.validate(currentSchema, result);
+};
+const getCurrentSchema = () => {
+    try {
+        const schema = document.querySelector('.schema textarea');
+        return JSON.parse(schema.value);
+    }
+    catch (_a) {
+        return;
+    }
+};
+const getForm = () => {
+    const form = document.querySelector('.form form');
+    if (form)
+        return form;
+};
+const getResult = () => {
+    try {
+        const result = document.querySelector('.result textarea');
+        return JSON.parse(result.value);
+    }
+    catch (_a) {
+        return;
+    }
+};
 const init = () => {
     const form = createForm();
     const submit = createFormButton();
@@ -65,7 +159,13 @@ const init = () => {
     const schemaSubmit = createSchemaButton();
     const result = document.querySelector('.result textarea');
     const resultSubmit = createResultButton();
-    return { form, submit, select, schema, schemaSubmit, result, resultSubmit };
+    const schemaValid = document.querySelector('.schema-valid');
+    const formValid = document.querySelector('.form-valid');
+    const resultValid = document.querySelector('.result-valid');
+    return {
+        form, submit, select, schema, schemaSubmit, result, resultSubmit,
+        schemaValid, formValid, resultValid
+    };
 };
 const createForm = () => {
     const formContainer = document.querySelector('.form');

@@ -53,7 +53,7 @@ export const getData = ( parent: ParentNode ) => {
       }
     }
 
-    if( value === '' && type !== 'string' ) return
+    if( value === '' && !namedElement.matches( ':required' ) ) return
 
     if ( type === 'integer' ) value = parseInt( value, 10 )
     if ( type === 'number' ) value = parseFloat( value )

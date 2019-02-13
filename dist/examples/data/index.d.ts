@@ -1,4 +1,4 @@
-export declare const simple: {
+export declare const registration: {
     "firstName": string;
     "lastName": string;
     "age": number;
