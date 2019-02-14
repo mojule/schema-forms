@@ -193,3 +193,4 @@ const onDelete: EventListener = ( e: Event ) => {
 
   deleteItem( e.target )
 }
+

@@ -10,4 +10,16 @@ export const onMutate = ( element: HTMLElement ) => {
   const namedElements = element.querySelectorAll( formElementSelector )
 
   namedElements.forEach( el => nameDecorator( <HTMLElement>el ) )
+
+  triggerInputOnForm( element )
+}
+
+export const triggerInputOnForm = ( el: HTMLElement ) => {
+  const form = el.closest( 'form' )
+
+  if ( form ) {
+    const event = new Event( 'input' )
+
+    form.dispatchEvent( event )
+  }
 }

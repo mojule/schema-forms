@@ -1218,6 +1218,14 @@ exports.onMutate = (element) => {
     selectify_1.selectify(element);
     const namedElements = element.querySelectorAll(consts_1.formElementSelector);
     namedElements.forEach(el => name_decorator_1.nameDecorator(el));
+    exports.triggerInputOnForm(element);
+};
+exports.triggerInputOnForm = (el) => {
+    const form = el.closest('form');
+    if (form) {
+        const event = new Event('input');
+        form.dispatchEvent(event);
+    }
 };
 
 },{"../consts":11,"../decorators/name-decorator":14,"./arrayify":8,"./selectify":10}],10:[function(require,module,exports){
@@ -1351,9 +1359,11 @@ exports.LabelDecorator = (document) => {
         inputs.forEach(input => {
             if (!input)
                 return;
-            const title = input.title || editor.dataset.title;
+            let title = input.title || editor.dataset.title;
             if (!title)
                 return;
+            if (input.matches(':required'))
+                title += '*';
             const inputLabel = label();
             input.before(inputLabel);
             inputLabel.appendChild(input);

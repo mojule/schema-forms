@@ -9,9 +9,11 @@ exports.LabelDecorator = (document) => {
         inputs.forEach(input => {
             if (!input)
                 return;
-            const title = input.title || editor.dataset.title;
+            let title = input.title || editor.dataset.title;
             if (!title)
                 return;
+            if (input.matches(':required'))
+                title += '*';
             const inputLabel = label();
             input.before(inputLabel);
             inputLabel.appendChild(input);
