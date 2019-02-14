@@ -55,8 +55,9 @@ export const getData = ( parent: ParentNode ) => {
 
     if( value === '' && !namedElement.matches( ':required' ) ) return
 
-    if ( type === 'integer' ) value = parseInt( value, 10 )
-    if ( type === 'number' ) value = parseFloat( value )
+    if( type === 'string_date-time' || type === 'string_time' ) value += ':00+00:00'
+    if ( type.startsWith( 'integer' ) ) value = parseInt( value, 10 )
+    if ( type.startsWith( 'number' ) ) value = parseFloat( value )
     if ( type === 'boolean' ) value = !!value
     if ( type === 'null' ) value = null
 
@@ -64,6 +65,11 @@ export const getData = ( parent: ParentNode ) => {
   } )
 
   const data = expand( flat )
+  const keys = Object.keys( data )
+
+  if ( keys.length === 1 && keys[ 0 ] === "undefined" ) {
+    return data[ keys[ 0 ] ]
+  }
 
   return data
 }

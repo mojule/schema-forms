@@ -2,10 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.metaAttributes = (meta) => {
     const { schema, keyIndex, pointer } = meta;
-    const { id, title } = schema;
+    const { id, title, format } = schema;
     let type = schema.type;
     if (type === 'array' && Array.isArray(schema.items))
         type = 'tuple';
+    if (format)
+        type += `_${format}`;
     const data = { title, pointer };
     if (type)
         data.type = type;

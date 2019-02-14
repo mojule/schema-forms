@@ -10,7 +10,8 @@ exports.nameDecorator = (editor) => {
     if (selectorAncestor)
         return;
     const name = exports.getName(input);
-    const { type } = editor.dataset;
+    const typeAncestor = editor.closest('[data-type]');
+    const type = typeAncestor ? typeAncestor.dataset.type : 'string';
     input.name = `${name}#${type}`;
 };
 exports.getName = (el) => {

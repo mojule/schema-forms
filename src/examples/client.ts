@@ -23,13 +23,17 @@ ajv.addMetaSchema( schemas.meta )
 ajv.addFormat( 'multiline', () => true )
 ajv.addFormat( 'password', () => true )
 ajv.addFormat( 'tel', () => true )
+ajv.addFormat( 'range', () => true )
 ajv.addFormat( 'color', /^\#[a-f0-9]{6}$/ )
 ajv.addFormat( 'month', /^\d{4}-\d{2}$/ )
+ajv.addFormat( 'week', /^\d{4}-W\d{2}$/ )
 
 document.addEventListener( 'DOMContentLoaded', () => {
   const {
-    form, submit, select, schema, schemaSubmit, result, resultSubmit,
-    schemaValid, formValid, resultValid
+    form, submit, select, schema, schemaSubmit, resultJson, resultFormData,
+    resultSubmit, schemaSection, formSection, resultSection, schemaValid,
+    formValid, resultValid, formErrors, schemaErrors, resultErrors, showJson,
+    showFormData
   } = init()
 
   submit.onclick = e => {
@@ -51,21 +55,48 @@ document.addEventListener( 'DOMContentLoaded', () => {
   }
 
   const onFormSubmit = () => {
+    if( !isSchemaValid() ) return
+    if( !isFormValid() ) return
+
+    resultSection.classList.remove( 'invalid' )
+
     const value = getData( form )
 
-    result.value = JSON.stringify( value, null, 2 )
+    resultJson.value = JSON.stringify( value, null, 2 )
 
     const formData = new FormData( form )
 
-    const entries = <[ string, string ][]>Array.from(
-      formData.entries()
-    ).map( ( [ key, value ] ) => [ key, String( value ) ] )
+    resultFormData.innerHTML = ''
+    Array.from( formData.entries() ).forEach( ( [ key, value ] ) => {
+      const tr = document.createElement( 'tr' )
+      const th = document.createElement( 'th' )
+      const td = document.createElement( 'td' )
 
-    console.log( entries )
+      th.innerText = key
+      td.innerHTML = String( value ).split( '\n' ).join( '<br>' )
+
+      tr.appendChild( th )
+      tr.appendChild( td )
+      resultFormData.appendChild( tr )
+    })
 
     const isValid = isResultValid()
 
     resultValid.innerText = isValid ? valid : invalid
+
+    if( !isValid ){
+      resultSection.classList.add( 'invalid' )
+
+      let errors = ajv.errorsText( ajv.errors )
+
+      if ( errors === 'No errors' ) {
+        errors = 'Invalid JSON'
+      } else {
+        errors = errors.split( ', ' ).join( '\n' )
+      }
+
+      resultErrors.innerText = errors
+    }
   }
 
   const onSelect = () => {
@@ -78,7 +109,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
     schema.value = JSON.stringify( currentSchema, null, 2 )
     form.innerHTML = ''
-    result.value = ''
+    resultJson.value = ''
+    resultFormData.innerHTML = ''
 
     onSchemaChange()
   }
@@ -87,16 +119,33 @@ document.addEventListener( 'DOMContentLoaded', () => {
     const isValid = isSchemaValid()
 
     schemaValid.innerText = isValid ? valid : invalid
+    formSection.classList.remove( 'invalid' )
+    resultSection.classList.remove( 'invalid' )
 
     if ( !isValid ) {
+      schemaSection.classList.add( 'invalid' )
+
+      let errors = ajv.errorsText( ajv.errors )
+
+      if( errors === 'No errors' ){
+        errors = 'Invalid JSON'
+      } else {
+        errors = errors.split( ', ' ).join( '\n' )
+      }
+
+      schemaErrors.innerText = errors
+
       form.innerHTML = ''
-      result.value = ''
+      resultJson.value = ''
+      resultFormData.innerHTML = ''
 
       formValid.innerText = unknown
       resultValid.innerText = unknown
 
       return
     }
+
+    schemaSection.classList.remove( 'invalid' )
 
     onSchemaSubmit()
   }
@@ -106,7 +155,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
     const schemaDom = schemaToDom( currentSchema, document )
 
     form.innerHTML = ''
-    result.value = ''
+    resultJson.value = ''
+    resultFormData.innerHTML = ''
 
     form.appendChild( schemaDom )
 
@@ -125,6 +175,22 @@ document.addEventListener( 'DOMContentLoaded', () => {
     formValid.innerText = isValid ? valid : invalid
 
     if ( !isValid ) {
+      formSection.classList.add( 'invalid' )
+
+      let errors = ''
+
+      const invalidItems = <HTMLInputElement[]>Array.from(
+        form.querySelectorAll( ':invalid' )
+      )
+
+      invalidItems.forEach( item => {
+        if( item.localName === 'fieldset' ) return
+
+        errors += `${ item.title || item.name || item.localName }: ${ item.validationMessage }\n`
+      })
+
+      formErrors.innerText = errors
+
       const currentFocus = <HTMLElement>document.activeElement
 
       form.reportValidity()
@@ -132,16 +198,43 @@ document.addEventListener( 'DOMContentLoaded', () => {
       if( currentFocus !== null ) currentFocus.focus()
 
       resultValid.innerText = unknown
-      result.value = ''
+      resultJson.value = ''
+      resultFormData.innerHTML = ''
 
       return
     }
 
+    formSection.classList.remove( 'invalid' )
+
     onFormSubmit()
   }
 
+  const onResultChange = () => {
+    const isValid = isResultValid()
+
+    resultValid.innerText = isValid ? valid : invalid
+
+    if ( !isValid ) {
+      resultSection.classList.add( 'invalid' )
+
+      let errors = ajv.errorsText( ajv.errors )
+
+      if ( errors === 'No errors' ) {
+        errors = 'Invalid JSON'
+      } else {
+        errors = errors.split( ', ' ).join( '\n' )
+      }
+
+      resultErrors.innerText = errors
+    }
+  }
+
   const onResultSubmit = () => {
-    const resultValue = JSON.parse( result.value )
+    if( !isSchemaValid() ) return
+    if( !isFormValid() ) return
+    if( !isResultValid() ) return
+
+    const resultValue = JSON.parse( resultJson.value )
     let currentSchema = JSON.parse( schema.value )
 
     currentSchema = populateSchema( resultValue, currentSchema )
@@ -153,7 +246,24 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
   schema.oninput = onSchemaChange
   form.oninput = onFormChange
+  resultJson.oninput = onResultChange
   select.onchange = onSelect
+
+  showJson.onclick = e => {
+    e.preventDefault()
+    showJson.classList.add( 'selected' )
+    showFormData.classList.remove( 'selected' )
+    resultSection.classList.remove( 'form-data' )
+    resultSection.classList.add( 'json' )
+  }
+
+  showFormData.onclick = e => {
+    e.preventDefault()
+    showJson.classList.remove( 'selected' )
+    showFormData.classList.add( 'selected' )
+    resultSection.classList.add( 'form-data' )
+    resultSection.classList.remove( 'json' )
+  }
 
   onSelect()
 } )
@@ -177,7 +287,7 @@ const isFormValid = () => {
 const isResultValid = () => {
   const result = getResult()
 
-  if( !result ) return false
+  if( result === undefined ) return false
 
   if( !isSchemaValid() ) return false
 
@@ -214,7 +324,6 @@ const getResult = () => {
   } catch {
     return
   }
-
 }
 
 const init = () => {
@@ -225,24 +334,35 @@ const init = () => {
     '.schema textarea'
   )
   const schemaSubmit = createSchemaButton()
-  const result = <HTMLTextAreaElement>document.querySelector( '.result textarea' )
+  const resultJson = <HTMLTextAreaElement>document.querySelector( '.result textarea.json' )
+  const resultFormData = <HTMLTableElement>document.querySelector( '.result table.form-data' )
   const resultSubmit = createResultButton()
+
+  const formSection = <HTMLElement>document.querySelector( '.form' )
+  const schemaSection = <HTMLElement>document.querySelector( '.schema' )
+  const resultSection = <HTMLElement>document.querySelector( '.result' )
 
   const schemaValid = <HTMLSourceElement>document.querySelector( '.schema-valid' )
   const formValid = <HTMLSourceElement>document.querySelector( '.form-valid' )
   const resultValid = <HTMLSourceElement>document.querySelector( '.result-valid' )
 
+  const formErrors = <HTMLPreElement>document.querySelector( '.form pre' )
+  const schemaErrors = <HTMLPreElement>document.querySelector( '.schema pre' )
+  const resultErrors = <HTMLPreElement>document.querySelector( '.result pre' )
+
+  const showJson = <HTMLAnchorElement>document.querySelector( '.result a[href="#json"]' )
+  const showFormData = <HTMLAnchorElement>document.querySelector( '.result a[href="#form-data"]' )
+
   return {
-    form, submit, select, schema, schemaSubmit, result, resultSubmit,
-    schemaValid, formValid, resultValid
+    form, submit, select, schema, schemaSubmit, resultJson, resultFormData,
+    resultSubmit, formSection, schemaSection, resultSection, schemaValid,
+    formValid, resultValid, formErrors, schemaErrors, resultErrors, showJson,
+    showFormData
   }
 }
 
 const createForm = () => {
-  const formContainer = document.querySelector( '.form' )!
-  const form = document.createElement( 'form' )
-
-  formContainer.appendChild( form )
+  const form = <HTMLFormElement>document.querySelector( '.form form' )
 
   return form
 }

@@ -1041,10 +1041,12 @@ function hasOwnProperty(obj, prop) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.metaAttributes = (meta) => {
     const { schema, keyIndex, pointer } = meta;
-    const { id, title } = schema;
+    const { id, title, format } = schema;
     let type = schema.type;
     if (type === 'array' && Array.isArray(schema.items))
         type = 'tuple';
+    if (format)
+        type += `_${format}`;
     const data = { title, pointer };
     if (type)
         data.type = type;
@@ -1379,7 +1381,8 @@ exports.nameDecorator = (editor) => {
     if (selectorAncestor)
         return;
     const name = exports.getName(input);
-    const { type } = editor.dataset;
+    const typeAncestor = editor.closest('[data-type]');
+    const type = typeAncestor ? typeAncestor.dataset.type : 'string';
     input.name = `${name}#${type}`;
 };
 exports.getName = (el) => {
@@ -1414,10 +1417,12 @@ ajv.addMetaSchema(schemas.meta);
 ajv.addFormat('multiline', () => true);
 ajv.addFormat('password', () => true);
 ajv.addFormat('tel', () => true);
+ajv.addFormat('range', () => true);
 ajv.addFormat('color', /^\#[a-f0-9]{6}$/);
 ajv.addFormat('month', /^\d{4}-\d{2}$/);
+ajv.addFormat('week', /^\d{4}-W\d{2}$/);
 document.addEventListener('DOMContentLoaded', () => {
-    const { form, submit, select, schema, schemaSubmit, result, resultSubmit, schemaValid, formValid, resultValid } = init();
+    const { form, submit, select, schema, schemaSubmit, resultJson, resultFormData, resultSubmit, schemaSection, formSection, resultSection, schemaValid, formValid, resultValid, formErrors, schemaErrors, resultErrors, showJson, showFormData } = init();
     submit.onclick = e => {
         e.preventDefault();
         onFormSubmit();
@@ -1431,13 +1436,38 @@ document.addEventListener('DOMContentLoaded', () => {
         onResultSubmit();
     };
     const onFormSubmit = () => {
+        if (!isSchemaValid())
+            return;
+        if (!isFormValid())
+            return;
+        resultSection.classList.remove('invalid');
         const value = get_data_1.getData(form);
-        result.value = JSON.stringify(value, null, 2);
+        resultJson.value = JSON.stringify(value, null, 2);
         const formData = new FormData(form);
-        const entries = Array.from(formData.entries()).map(([key, value]) => [key, String(value)]);
-        console.log(entries);
+        resultFormData.innerHTML = '';
+        Array.from(formData.entries()).forEach(([key, value]) => {
+            const tr = document.createElement('tr');
+            const th = document.createElement('th');
+            const td = document.createElement('td');
+            th.innerText = key;
+            td.innerHTML = String(value).split('\n').join('<br>');
+            tr.appendChild(th);
+            tr.appendChild(td);
+            resultFormData.appendChild(tr);
+        });
         const isValid = isResultValid();
         resultValid.innerText = isValid ? valid : invalid;
+        if (!isValid) {
+            resultSection.classList.add('invalid');
+            let errors = ajv.errorsText(ajv.errors);
+            if (errors === 'No errors') {
+                errors = 'Invalid JSON';
+            }
+            else {
+                errors = errors.split(', ').join('\n');
+            }
+            resultErrors.innerText = errors;
+        }
     };
     const onSelect = () => {
         const key = select.selectedOptions[0].value;
@@ -1447,26 +1477,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         schema.value = JSON.stringify(currentSchema, null, 2);
         form.innerHTML = '';
-        result.value = '';
+        resultJson.value = '';
+        resultFormData.innerHTML = '';
         onSchemaChange();
     };
     const onSchemaChange = () => {
         const isValid = isSchemaValid();
         schemaValid.innerText = isValid ? valid : invalid;
+        formSection.classList.remove('invalid');
+        resultSection.classList.remove('invalid');
         if (!isValid) {
+            schemaSection.classList.add('invalid');
+            let errors = ajv.errorsText(ajv.errors);
+            if (errors === 'No errors') {
+                errors = 'Invalid JSON';
+            }
+            else {
+                errors = errors.split(', ').join('\n');
+            }
+            schemaErrors.innerText = errors;
             form.innerHTML = '';
-            result.value = '';
+            resultJson.value = '';
+            resultFormData.innerHTML = '';
             formValid.innerText = unknown;
             resultValid.innerText = unknown;
             return;
         }
+        schemaSection.classList.remove('invalid');
         onSchemaSubmit();
     };
     const onSchemaSubmit = () => {
         const currentSchema = JSON.parse(schema.value);
         const schemaDom = schema_to_dom_1.schemaToDom(currentSchema, document);
         form.innerHTML = '';
-        result.value = '';
+        resultJson.value = '';
+        resultFormData.innerHTML = '';
         form.appendChild(schemaDom);
         const root = document.querySelector('[data-root]');
         if (!root)
@@ -1478,18 +1523,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const isValid = isFormValid();
         formValid.innerText = isValid ? valid : invalid;
         if (!isValid) {
+            formSection.classList.add('invalid');
+            let errors = '';
+            const invalidItems = Array.from(form.querySelectorAll(':invalid'));
+            invalidItems.forEach(item => {
+                if (item.localName === 'fieldset')
+                    return;
+                errors += `${item.title || item.name || item.localName}: ${item.validationMessage}\n`;
+            });
+            formErrors.innerText = errors;
             const currentFocus = document.activeElement;
             form.reportValidity();
             if (currentFocus !== null)
                 currentFocus.focus();
             resultValid.innerText = unknown;
-            result.value = '';
+            resultJson.value = '';
+            resultFormData.innerHTML = '';
             return;
         }
+        formSection.classList.remove('invalid');
         onFormSubmit();
     };
+    const onResultChange = () => {
+        const isValid = isResultValid();
+        resultValid.innerText = isValid ? valid : invalid;
+        if (!isValid) {
+            resultSection.classList.add('invalid');
+            let errors = ajv.errorsText(ajv.errors);
+            if (errors === 'No errors') {
+                errors = 'Invalid JSON';
+            }
+            else {
+                errors = errors.split(', ').join('\n');
+            }
+            resultErrors.innerText = errors;
+        }
+    };
     const onResultSubmit = () => {
-        const resultValue = JSON.parse(result.value);
+        if (!isSchemaValid())
+            return;
+        if (!isFormValid())
+            return;
+        if (!isResultValid())
+            return;
+        const resultValue = JSON.parse(resultJson.value);
         let currentSchema = JSON.parse(schema.value);
         currentSchema = populate_schema_1.populateSchema(resultValue, currentSchema);
         schema.value = JSON.stringify(currentSchema, null, 2);
@@ -1497,7 +1574,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     schema.oninput = onSchemaChange;
     form.oninput = onFormChange;
+    resultJson.oninput = onResultChange;
     select.onchange = onSelect;
+    showJson.onclick = e => {
+        e.preventDefault();
+        showJson.classList.add('selected');
+        showFormData.classList.remove('selected');
+        resultSection.classList.remove('form-data');
+        resultSection.classList.add('json');
+    };
+    showFormData.onclick = e => {
+        e.preventDefault();
+        showJson.classList.remove('selected');
+        showFormData.classList.add('selected');
+        resultSection.classList.add('form-data');
+        resultSection.classList.remove('json');
+    };
     onSelect();
 });
 const isSchemaValid = () => {
@@ -1514,7 +1606,7 @@ const isFormValid = () => {
 };
 const isResultValid = () => {
     const result = getResult();
-    if (!result)
+    if (result === undefined)
         return false;
     if (!isSchemaValid())
         return false;
@@ -1552,20 +1644,29 @@ const init = () => {
     const select = createSelect();
     const schema = document.querySelector('.schema textarea');
     const schemaSubmit = createSchemaButton();
-    const result = document.querySelector('.result textarea');
+    const resultJson = document.querySelector('.result textarea.json');
+    const resultFormData = document.querySelector('.result table.form-data');
     const resultSubmit = createResultButton();
+    const formSection = document.querySelector('.form');
+    const schemaSection = document.querySelector('.schema');
+    const resultSection = document.querySelector('.result');
     const schemaValid = document.querySelector('.schema-valid');
     const formValid = document.querySelector('.form-valid');
     const resultValid = document.querySelector('.result-valid');
+    const formErrors = document.querySelector('.form pre');
+    const schemaErrors = document.querySelector('.schema pre');
+    const resultErrors = document.querySelector('.result pre');
+    const showJson = document.querySelector('.result a[href="#json"]');
+    const showFormData = document.querySelector('.result a[href="#form-data"]');
     return {
-        form, submit, select, schema, schemaSubmit, result, resultSubmit,
-        schemaValid, formValid, resultValid
+        form, submit, select, schema, schemaSubmit, resultJson, resultFormData,
+        resultSubmit, formSection, schemaSection, resultSection, schemaValid,
+        formValid, resultValid, formErrors, schemaErrors, resultErrors, showJson,
+        showFormData
     };
 };
 const createForm = () => {
-    const formContainer = document.querySelector('.form');
-    const form = document.createElement('form');
-    formContainer.appendChild(form);
+    const form = document.querySelector('.form form');
     return form;
 };
 const createFormButton = () => {
@@ -2081,7 +2182,14 @@ module.exports={
                 }
             ]
         }
-    }
+    },
+    "required": [
+        "plain-string-default", "plain-string-short-list-default",
+        "datetime-string-with-default", "email-string-with-default",
+        "month-string-with-default", "password-with-default",
+        "telephone-with-default", "time-with-default", "url-with-default",
+        "week-with-default", "multiline-with-default", "number-with-default"
+    ]
 }
 
 },{}],22:[function(require,module,exports){
@@ -2166,7 +2274,8 @@ module.exports={
 },{}],23:[function(require,module,exports){
 module.exports={
     "title": "New Schema",
-    "type": "object"
+    "type": "string",
+    "default": "Value"
 }
 
 },{}],24:[function(require,module,exports){
@@ -2474,7 +2583,7 @@ module.exports={
 
 },{}],29:[function(require,module,exports){
 module.exports={
-    "title": "A list of tasks",
+    "title": "Todo List",
     "type": "object",
     "required": [
         "title"
@@ -2482,7 +2591,7 @@ module.exports={
     "properties": {
         "title": {
             "type": "string",
-            "title": "Task list title"
+            "title": "Task List Title"
         },
         "tasks": {
             "type": "array",
@@ -2569,9 +2678,11 @@ exports.getData = (parent) => {
         }
         if (value === '' && !namedElement.matches(':required'))
             return;
-        if (type === 'integer')
+        if (type === 'string_date-time' || type === 'string_time')
+            value += ':00+00:00';
+        if (type.startsWith('integer'))
             value = parseInt(value, 10);
-        if (type === 'number')
+        if (type.startsWith('number'))
             value = parseFloat(value);
         if (type === 'boolean')
             value = !!value;
@@ -2580,6 +2691,10 @@ exports.getData = (parent) => {
         flat[name] = value;
     });
     const data = json_pointer_1.expand(flat);
+    const keys = Object.keys(data);
+    if (keys.length === 1 && keys[0] === "undefined") {
+        return data[keys[0]];
+    }
     return data;
 };
 

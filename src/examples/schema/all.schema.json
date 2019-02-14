@@ -422,5 +422,12 @@
         }
       ]
     }
-  }
+  },
+  "required": [
+    "plain-string-default", "plain-string-short-list-default",
+    "datetime-string-with-default", "email-string-with-default",
+    "month-string-with-default", "password-with-default",
+    "telephone-with-default", "time-with-default", "url-with-default",
+    "week-with-default", "multiline-with-default", "number-with-default"
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "title": "A list of tasks",
+  "title": "Todo List",
   "type": "object",
   "required": [
     "title"
@@ -7,7 +7,7 @@
   "properties": {
     "title": {
       "type": "string",
-      "title": "Task list title"
+      "title": "Task List Title"
     },
     "tasks": {
       "type": "array",

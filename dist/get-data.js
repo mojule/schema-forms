@@ -50,9 +50,11 @@ exports.getData = (parent) => {
         }
         if (value === '' && !namedElement.matches(':required'))
             return;
-        if (type === 'integer')
+        if (type === 'string_date-time' || type === 'string_time')
+            value += ':00+00:00';
+        if (type.startsWith('integer'))
             value = parseInt(value, 10);
-        if (type === 'number')
+        if (type.startsWith('number'))
             value = parseFloat(value);
         if (type === 'boolean')
             value = !!value;
@@ -61,6 +63,10 @@ exports.getData = (parent) => {
         flat[name] = value;
     });
     const data = json_pointer_1.expand(flat);
+    const keys = Object.keys(data);
+    if (keys.length === 1 && keys[0] === "undefined") {
+        return data[keys[0]];
+    }
     return data;
 };
 //# sourceMappingURL=get-data.js.map

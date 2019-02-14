@@ -12,7 +12,8 @@ export const nameDecorator: ElementDecorator = ( editor: HTMLElement ) => {
   if( selectorAncestor ) return
 
   const name = getName( input )
-  const { type } = editor.dataset
+  const typeAncestor = <HTMLElement|null>editor.closest( '[data-type]' )
+  const type = typeAncestor ? typeAncestor.dataset.type : 'string'
 
   input.name = `${ name }#${ type }`
 }

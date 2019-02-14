@@ -2,12 +2,14 @@ import { SchemaMetaData } from '../types'
 
 export const metaAttributes = ( meta: SchemaMetaData ) => {
   const { schema, keyIndex, pointer } = meta
-  const { id, title } = schema
+  const { id, title, format } = schema
 
   let type = <string | undefined>schema.type
 
   if ( type === 'array' && Array.isArray( schema.items ) )
     type = 'tuple'
+
+  if( format ) type += `_${ format }`
 
   const data: any = { title, pointer }
 

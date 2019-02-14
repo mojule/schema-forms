@@ -1,4 +1,5 @@
 {
     "title": "New Schema",
-    "type": "object"
+    "type": "string",
+    "default": "Value"
 }

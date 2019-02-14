@@ -11,25 +11,29 @@
       <label>Schemas</label>
       <select>
       </select>
-      <div class="headings">
-        <h1>Schema <span class="schema-valid">❓</span></h1>
-        <h1>Form <span class="form-valid">❓</span></h1>
-        <h1>Result <span class="result-valid">❓</span></h1>
-      </div>
     </header>
     <main class="viewport">
-      <div class="schema">
+      <section class="schema">
+        <h1><span>Schema</span><span class="schema-valid">❓</span></h1>
         <textarea></textarea>
-      </div>
-      <div class="form"></div>
-      <div class="result">
-        <textarea></textarea>
-      </div>
+        <pre></pre>
+        <div class="schema-button"></div>
+      </section>
+      <section class="form">
+        <h1><span>Form</span><span class="form-valid">❓</span></h1>
+        <form></form>
+        <pre></pre>
+        <div class="form-button"></div>
+      </section>
+      <section class="result json">
+        <h1><span>Result</span><span class="result-valid">❓</span><a href="#json" class="selected">JSON</a><a href="#form-data">Form Data</a></h1>
+        <textarea class="json" id="json"></textarea>
+        <table class="form-data" id="form-data"></table>
+        <pre></pre>
+        <div class="result-button"></div>
+      </section>
     </main>
     <footer>
-      <div class="schema-button"></div>
-      <div class="form-button"></div>
-      <div class="result-button"></div>
     </footer>
     <script src="client.js"></script>
   </body>
