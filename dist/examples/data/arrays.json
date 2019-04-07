@@ -1,7 +1,0 @@
-{
-    "array-defaults": [3, 2, 1],
-    "nested-defaults": [
-        [1, 2],
-        [3, 4]
-    ]
-}

@@ -1,35 +1,44 @@
 {
   "name": "@mojule/schema-forms",
-  "version": "0.1.0",
-  "description": "JSON Schema to HTML forms",
+  "version": "0.2.0",
+  "description": "Generate form elements from JSON Schema",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "tsc && mocha ./dist/test",
     "coverage": "tsc && nyc --reporter=html --reporter=text mocha ./dist/test",
-    "examples": "tsc && browserify ./dist/examples/client.js -o ./examples/client.js"
+    "client-examples": "tsc && browserify ./dist/examples/client.js -o ./examples/client.js",
+    "client-playground": "tsc && browserify ./dist/examples/playground.js -o ./examples/playground.js",
+    "server-examples": "tsc && node ./dist/examples/server"
   },
   "nyc": {
     "exclude": [
-      "./dist/test"
+      "./dist/test",
+      "./dist/examples",
+      "./dist/server"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mojule/schema-to-form-elements.git"
   },
   "keywords": [],
   "author": "Nik Coughlin <nrkn.com@gmail.com>",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mojule/schema-to-form-elements/issues"
+  },
+  "homepage": "https://github.com/mojule/schema-to-form-elements#readme",
   "devDependencies": {
-    "@types/jsdom": "^12.2.1",
-    "@types/json-schema": "^7.0.1",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^10.12.12",
-    "jsdom": "^13.2.0",
+    "@mojule/json-pointer": "^0.3.4",
+    "@types/jsdom": "^12.2.3",
+    "@types/json-schema": "^7.0.3",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^11.12.2",
+    "ajv": "^6.10.0",
+    "jsdom": "^14.0.0",
     "mocha": "^5.2.0"
   },
-  "dependencies": {
-    "@entity-schema/json-schema-traverse": "^0.6.0",
-    "@mojule/h": "^0.2.7",
-    "@mojule/json-pointer": "^0.3.4",
-    "ajv": "^6.9.1"
-  }
+  "dependencies": {}
 }
