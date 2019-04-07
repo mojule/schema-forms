@@ -20,4 +20,5 @@ export declare const enums: {
 };
 export declare const arrays: {
     "array-defaults": number[];
+    "nested-defaults": number[][];
 };

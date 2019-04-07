@@ -30,7 +30,7 @@ exports.arrayify = (element) => {
             const defaultValue = JSON.parse(defaultScriptEl.innerText);
             if (!Array.isArray(defaultValue))
                 throw Error('Expected default value to be array');
-            addDefault(defaultValue, name, id);
+            addDefault(ol, defaultValue, name, id);
         }
         if (arrayEl.dataset.minItems) {
             const min = Number(arrayEl.dataset.minItems);
@@ -38,15 +38,10 @@ exports.arrayify = (element) => {
         }
     });
 };
-const addDefault = (defaultValue, name, id) => {
+const addDefault = (ol, defaultValue, name, id) => {
     console.log('adding defaults');
-    defaultValue.forEach((value, i) => {
-        const pointerPrefix = `${name}/${i}`;
-        const li = add(id);
-        if (li) {
-            populate_form_1.populateForm(li, value, pointerPrefix);
-        }
-    });
+    defaultValue.forEach(() => add(id));
+    populate_form_1.populateForm(ol, defaultValue, name);
 };
 const ensureMin = (ol, min, id) => {
     let count = ol.children.length;

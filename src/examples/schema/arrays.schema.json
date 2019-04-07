@@ -72,6 +72,18 @@
           "type": "integer"
         }
       }
+    },
+    "nested-defaults": {
+      "title": "Nested with Defaults",
+      "type": "array",
+      "items": {
+        "title": "Inner Array",
+        "type": "array",
+        "items": {
+          "title": "Value",
+          "type": "integer"
+        }
+      }
     }
   }
 }

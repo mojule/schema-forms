@@ -1,0 +1,89 @@
+{
+  "id": "http://workingspec.com/schema/one-of",
+  "title": "One Of and Any Of Schema",
+  "type": "object",
+  "properties": {
+    "oneOf": {
+      "title": "One Of",
+      "oneOf": [
+        {
+          "title": "oneOf is a string",
+          "type": "string",
+          "default": "Foo"
+        },
+        {
+          "title": "oneOf is a number",
+          "type": "number",
+          "default": 1
+        }
+      ]
+    },
+    "arrayOfOneOf": {
+      "title": "Array of One Of",
+      "type": "array",
+      "items": {
+        "title": "One Of in Array",
+        "oneOf": [
+          {
+            "title": "oneOf is a string",
+            "type": "string",
+            "default": "Foo"
+          },
+          {
+            "title": "oneOf is a number",
+            "type": "number",
+            "default": 1
+          }
+        ]
+      }
+    },
+    "anyOf": {
+      "title": "Any Of",
+      "anyOf": [
+        {
+          "title": "anyOf1 is a string",
+          "type": "string",
+          "default": "Bar"
+        },
+        {
+          "title": "anyOf2 is a number",
+          "type": "number",
+          "default": 2
+        },
+        {
+          "title": "anyOf3 is a string",
+          "type": "string",
+          "default": "Qux"
+        },
+        {
+          "title": "anyOf4 is a number",
+          "type": "number",
+          "default": 3
+        },
+        {
+          "title": "anyOf5 is a string",
+          "type": "string",
+          "default": "Unh"
+        },
+        {
+          "title": "anyOf6 is a number",
+          "type": "number",
+          "default": 4
+        },
+        {
+          "title": "anyOf7 is a string",
+          "type": "string",
+          "default": "Prrr"
+        },
+        {
+          "title": "anyOf8 is an array",
+          "type": "array",
+          "items": {
+            "title": "anyof8 number",
+            "type": "number"
+          }
+        }
+      ]
+    }
+  }
+}

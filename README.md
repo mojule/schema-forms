@@ -3,7 +3,6 @@
 
 ## TODO
 
-- populate objects from default
 - populate oneof/anyof from default
 - array additionalItems
 - array uniqueItems

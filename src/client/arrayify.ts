@@ -3,7 +3,7 @@ import { getName } from '../decorators/name-decorator'
 import {
   pointerToSelector, strictData, strictSelect, strictClosest
 } from '../utils'
-import { populateForm } from '../populate-form';
+import { populateForm } from '../populate-form'
 
 export const arrayify = ( element: HTMLElement ) => {
   const rootElement = strictClosest( element, '[data-root]' )
@@ -47,7 +47,7 @@ export const arrayify = ( element: HTMLElement ) => {
       if( !Array.isArray( defaultValue ) )
         throw Error( 'Expected default value to be array' )
 
-      addDefault( defaultValue, name, id )
+      addDefault( ol, defaultValue, name, id )
     }
 
     if ( arrayEl.dataset.minItems ){
@@ -58,17 +58,12 @@ export const arrayify = ( element: HTMLElement ) => {
   } )
 }
 
-const addDefault = ( defaultValue: any[], name: string, id: string ) => {
+const addDefault = ( ol: HTMLOListElement, defaultValue: any[], name: string, id: string ) => {
   console.log( 'adding defaults' )
 
-  defaultValue.forEach( ( value, i ) => {
-    const pointerPrefix = `${ name }/${ i }`
-    const li = add( id )
+  defaultValue.forEach( () => add( id ) )
 
-    if( li ){
-      populateForm( li, value, pointerPrefix )
-    }
-  } )
+  populateForm( ol, defaultValue, name )
 }
 
 const ensureMin = ( ol: HTMLOListElement, min: number, id: string ) => {
@@ -193,4 +188,3 @@ const onDelete: EventListener = ( e: Event ) => {
 
   deleteItem( e.target )
 }
-
