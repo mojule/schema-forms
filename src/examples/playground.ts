@@ -69,6 +69,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
     const formData = new FormData( form )
 
     resultFormData.innerHTML = ''
+
     Array.from( formData.entries() ).forEach( ( [ key, value ] ) => {
       const tr = document.createElement( 'tr' )
       const th = document.createElement( 'th' )
