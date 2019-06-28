@@ -65,6 +65,7 @@ export const getEntries =
   }
 
 export const keyToJsonPointer = ( key: string ) => {
+  key = key.replace( /\]\[/g, '/' )
   key = key.replace( /\[/g, '/' )
   key = key.replace( /\]/g, '/' )
 

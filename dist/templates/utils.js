@@ -32,6 +32,7 @@ exports.getEntries = (form, allowEmptyValue = true) => {
     return result;
 };
 exports.keyToJsonPointer = (key) => {
+    key = key.replace(/\]\[/g, '/');
     key = key.replace(/\[/g, '/');
     key = key.replace(/\]/g, '/');
     if (key[key.length - 1] === '/')
