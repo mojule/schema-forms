@@ -1,16 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ArrayListApi = void 0;
 const array_item_1 = require("../types/array/array-item");
 const utils_1 = require("../utils");
 // TODO enforce minItems/maxItems
-exports.ArrayListApi = (document, container, schema, templates) => {
+const ArrayListApi = (document, container, schema, templates) => {
     const list = container.querySelector('ol');
     if (!list)
         throw Error('ArrayListApi: container is missing OL');
     if (!schema.items || Array.isArray(schema.items))
         throw Error('ArrayListApi: schema.items should be a schema');
     const childSchema = schema.items;
-    if (typeof childSchema.type !== 'string')
+    if (typeof childSchema === 'boolean' || typeof childSchema.type !== 'string')
         throw Error('ArrayListApi: schema.items.type should be a string');
     const template = templates[childSchema.type];
     if (!template)
@@ -58,4 +59,5 @@ exports.ArrayListApi = (document, container, schema, templates) => {
         remove
     };
 };
+exports.ArrayListApi = ArrayListApi;
 //# sourceMappingURL=array-list.js.map

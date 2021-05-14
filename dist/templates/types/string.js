@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.StringTemplate = void 0;
 const utils_1 = require("../utils");
-exports.StringTemplate = (document, isMultiline = false) => {
+const StringTemplate = (document, isMultiline = false) => {
     const stringTemplate = (schema = {}, name = '', value, isRequired = false) => {
         let editor;
         if (isMultiline) {
@@ -35,4 +36,5 @@ exports.StringTemplate = (document, isMultiline = false) => {
     };
     return stringTemplate;
 };
+exports.StringTemplate = StringTemplate;
 //# sourceMappingURL=string.js.map

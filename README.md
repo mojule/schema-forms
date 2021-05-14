@@ -9,6 +9,8 @@ todo: rationale, toc, example code, playground, full documentation, etc
 
 `npm install @mojule/schema-forms`
 
+Note, uses `$id` from Schema 6+, not `id` like in schema4
+
 ## features
 
 - supports all schema functionality required for the majority of data models,
@@ -117,7 +119,8 @@ PRs will be welcome after 1.0 release, until then please open an issue to
 discuss
 
 todo: document which features won't be supported as they don't make sense for
-generating forms, support JSON Schema past draft 4
+generating forms, additionally the lists below were written when it was using
+schema 4, currently at schema 7, so update them for that too
 
 ### ✔️ string
 
@@ -242,7 +245,7 @@ const templates = TypeTemplates( document )
 
 ```typescript
 export type SchemaTemplate =
-  ( schema?: JSONSchema4, name?: string, value?: any, isRequired?: boolean ) => HTMLElement
+  ( schema?: JSONSchema7, name?: string, value?: any, isRequired?: boolean ) => HTMLElement
 
 export interface Templates {
   array: SchemaTemplate
@@ -307,7 +310,7 @@ implementation of Document, and return a function that creates an HTML element
 The signature for a schema template is:
 
 ```typescript
-( schema?: JSONSchema4, name?: string, value?: any, isRequired?: boolean ) => HTMLElement
+( schema?: JSONSchema7, name?: string, value?: any, isRequired?: boolean ) => HTMLElement
 ```
 
 ### StringTemplate

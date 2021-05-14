@@ -1,5 +1,5 @@
 import * as contactForm from '../schema/contact-form.schema.json'
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { ObjectTemplate } from '../templates/types/object'
 import { StringTemplate } from '../templates/types/string'
 import { LabelDecorator } from '../templates/decorators/label'
@@ -8,7 +8,7 @@ import { FormatDecorator } from '../templates/decorators/format'
 import { entriesToPointers, getEntries } from '../templates/utils'
 import { document, form } from '../server/dom'
 
-const schema = <JSONSchema4>contactForm
+const schema = contactForm as JSONSchema7
 
 const stringTemplate = StringTemplate( document )
 const objectTemplate = ObjectTemplate( document, { string: stringTemplate } )

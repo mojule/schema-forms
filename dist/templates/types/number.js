@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.NumberTemplate = void 0;
 const utils_1 = require("../utils");
-exports.NumberTemplate = (document, isRange = false) => {
+const NumberTemplate = (document, isRange = false) => {
     const numberTemplate = (schema = {}, name = '', value, isRequired = false) => {
         const editor = document.createElement('input');
         editor.type = isRange ? 'range' : 'number';
@@ -32,4 +33,5 @@ exports.NumberTemplate = (document, isRange = false) => {
     };
     return numberTemplate;
 };
+exports.NumberTemplate = NumberTemplate;
 //# sourceMappingURL=number.js.map

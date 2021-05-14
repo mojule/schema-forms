@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.TupleTemplate = void 0;
 const utils_1 = require("../../utils");
-exports.TupleTemplate = (document, templates = {}) => {
+const TupleTemplate = (document, templates = {}) => {
     const tupleTemplate = (schema = {}, name = '', value, isRequired = false) => {
         const container = document.createElement('div');
         container.title = utils_1.getTitle(schema, name, 'Tuple');
@@ -12,7 +13,8 @@ exports.TupleTemplate = (document, templates = {}) => {
         if (typeof value === 'undefined' && Array.isArray(schema.default))
             value = schema.default;
         schema.items.forEach((childSchema, key) => {
-            if (typeof childSchema.type !== 'string')
+            if (typeof childSchema === 'boolean' ||
+                typeof childSchema.type !== 'string')
                 return;
             const template = templates[childSchema.type];
             if (!template)
@@ -29,4 +31,5 @@ exports.TupleTemplate = (document, templates = {}) => {
     };
     return tupleTemplate;
 };
+exports.TupleTemplate = TupleTemplate;
 //# sourceMappingURL=tuple.js.map

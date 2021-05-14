@@ -1,5 +1,5 @@
 import * as nestedArray from '../schema/nested-array.schema.json'
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { ArrayTemplate } from '../templates/types/array'
 import { NumberTemplate } from '../templates/types/number'
 import { ArrayListTemplate } from '../templates/types/array/array-list'
@@ -9,7 +9,7 @@ import { ArrayItemTemplate } from '../templates/types/array/array-item'
 import { entriesToPointers, getEntries } from '../templates/utils'
 import { document, form } from '../server/dom'
 
-const schema = <JSONSchema4>nestedArray
+const schema = nestedArray as JSONSchema7
 
 const templates: Partial<Templates> = {}
 

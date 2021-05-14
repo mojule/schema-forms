@@ -1,6 +1,6 @@
 import { Templates } from '../../types';
-import { JSONSchema4 } from 'json-schema';
-export declare const ArrayListApi: (document: Document, container: HTMLElement, schema: JSONSchema4, templates: Partial<Templates>) => ArrayApi;
+import { JSONSchema7 } from 'json-schema';
+export declare const ArrayListApi: (document: Document, container: HTMLElement, schema: JSONSchema7, templates: Partial<Templates>) => ArrayApi;
 export interface ArrayApi {
     readonly count: number;
     clear: () => void;

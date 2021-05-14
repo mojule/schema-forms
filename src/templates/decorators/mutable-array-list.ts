@@ -1,4 +1,4 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { Templates, SchemaTemplate } from '../../types'
 import { ArrayListApi } from '../api/array-list'
 import { getTitle } from '../utils'
@@ -12,12 +12,13 @@ export const MutableArrayListDecorator =
     arrayList: SchemaTemplate,
     templates: Partial<Templates>
   ) => {
-    const mutableArrayListDecorator = ( schema: JSONSchema4 = {}, name = '', value?: any[] ) => {
+    const mutableArrayListDecorator = ( schema: JSONSchema7 = {}, name = '', value?: any[] ) => {
       const container = arrayList( schema, name, value )
 
       if (
         !schema.items ||
         Array.isArray( schema.items ) ||
+        typeof schema.items === 'boolean' ||
         typeof schema.items.type !== 'string'
       ) return container
 
@@ -76,7 +77,7 @@ export const MutableArrayItemDecorator =
     document: Document,
     arrayItem: SchemaTemplate
   ) => {
-    const mutableArrayItemDecorator = ( schema: JSONSchema4 = {}, name = '', value?: any ) => {
+    const mutableArrayItemDecorator = ( schema: JSONSchema7 = {}, name = '', value?: any ) => {
       const item = arrayItem( schema, name, value )
 
       const title = `Delete ${ getTitle( schema, name, 'Item' ) }`

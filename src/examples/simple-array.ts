@@ -1,5 +1,5 @@
 import * as simpleArray from '../schema/simple-array.schema.json'
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { ArrayTemplate } from '../templates/types/array'
 import { NumberTemplate } from '../templates/types/number'
 import { ArrayListTemplate } from '../templates/types/array/array-list'
@@ -9,7 +9,7 @@ import { ArrayItemTemplate } from '../templates/types/array/array-item'
 import { document, form } from '../server/dom'
 import { entriesToPointers, getEntries } from '../templates/utils'
 
-const schema = <JSONSchema4>simpleArray
+const schema = simpleArray as JSONSchema7
 
 const templates: Partial<Templates> = {}
 

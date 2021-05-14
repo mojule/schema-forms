@@ -1,7 +1,7 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { TypedFormEntry, TypedFormEntryValue, EditorElement } from '../types';
 
-export const getTitle = ( schema: JSONSchema4, name = '', fallback = 'Schema' ) =>
+export const getTitle = ( schema: JSONSchema7, name = '', fallback = 'Schema' ) =>
   schema.title || name || fallback
 
 export const getChildName = ( name: string, key: any ) =>

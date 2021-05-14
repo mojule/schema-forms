@@ -1,10 +1,10 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { getTitle } from '../utils'
 import { NumberTemplateFactory } from '../../types';
 
 export const NumberTemplate: NumberTemplateFactory =
   ( document: Document, isRange = false ) => {
-    const numberTemplate = ( schema: JSONSchema4 = {}, name = '', value?: number, isRequired = false ) => {
+    const numberTemplate = ( schema: JSONSchema7 = {}, name = '', value?: number, isRequired = false ) => {
       const editor = document.createElement( 'input' )
 
       editor.type = isRange ? 'range' : 'number'

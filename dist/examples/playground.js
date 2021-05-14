@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Ajv = require("ajv");
+const ajv_1 = require("ajv");
 const schemas = require("../schema");
 const data = require("../schema/data");
 const get_data_1 = require("./get-data");
@@ -9,10 +9,8 @@ const templates_1 = require("../templates");
 const valid = '✔️';
 const invalid = '❌';
 const unknown = '❓';
-const ajv = new Ajv({
-    schemaId: 'id',
-    allErrors: true,
-    jsonPointers: true
+const ajv = new ajv_1.default({
+    allErrors: true
 });
 ajv.addMetaSchema(schemas.meta);
 ajv.addFormat('multiline', () => true);
@@ -197,7 +195,7 @@ const isSchemaValid = () => {
     const schema = getCurrentSchema();
     if (!schema)
         return false;
-    return ajv.validate('http://json-schema.org/draft-04/schema#', schema);
+    return ajv.validate('http://json-schema.org/draft-07/schema#', schema);
 };
 const isFormValid = () => {
     const form = getForm();

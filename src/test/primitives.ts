@@ -1,5 +1,5 @@
 import * as assert from 'assert'
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { document } from '../server/dom'
 import { SchemaTemplate } from '../types'
 import { BooleanTemplate, NumberTemplate, StringTemplate } from '..'
@@ -63,7 +63,7 @@ describe( 'schema-forms', () => {
 
           it( 'default title', () => {
             const input = <HTMLInputElement>templates[ type ](
-              <JSONSchema4>{ type }
+              <JSONSchema7>{ type }
             )
 
             assert.strictEqual( input.title, inputTitle )
@@ -138,7 +138,7 @@ describe( 'schema-forms', () => {
 
             it( 'max matches maximum', () => {
               const input = <HTMLInputElement>templates[ type ](
-                <JSONSchema4>{ type, maximum: 2 }
+                <JSONSchema7>{ type, maximum: 2 }
               )
 
               assert.strictEqual( input.max, '2' )

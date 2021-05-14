@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ObjectTemplate = void 0;
 const utils_1 = require("../utils");
-exports.ObjectTemplate = (document, templates = {}) => {
+const ObjectTemplate = (document, templates = {}) => {
     const objectTemplate = (schema = {}, name = '', value) => {
         const container = document.createElement('div');
         container.title = utils_1.getTitle(schema, name, 'Object');
@@ -14,7 +15,8 @@ exports.ObjectTemplate = (document, templates = {}) => {
         const required = schema.required || [];
         Object.keys(schema.properties).forEach(key => {
             const childSchema = schema.properties[key];
-            if (typeof childSchema.type !== 'string')
+            if (typeof childSchema === 'boolean' ||
+                typeof childSchema.type !== 'string')
                 return;
             const template = templates[childSchema.type];
             if (!template)
@@ -32,4 +34,5 @@ exports.ObjectTemplate = (document, templates = {}) => {
     };
     return objectTemplate;
 };
+exports.ObjectTemplate = ObjectTemplate;
 //# sourceMappingURL=object.js.map

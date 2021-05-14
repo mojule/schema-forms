@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConstDecorator = (_document, stringOrNumberTemplate) => {
+exports.ConstDecorator = void 0;
+const ConstDecorator = (_document, stringOrNumberTemplate) => {
     const constDecorator = (schema = {}, name = '', value, isRequired = false) => {
         if (Array.isArray(schema.enum) && schema.enum.length === 1) {
             const editor = stringOrNumberTemplate(schema, name, schema.enum[0]);
@@ -19,4 +20,5 @@ exports.ConstDecorator = (_document, stringOrNumberTemplate) => {
     };
     return constDecorator;
 };
+exports.ConstDecorator = ConstDecorator;
 //# sourceMappingURL=const.js.map

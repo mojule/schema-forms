@@ -1,4 +1,4 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { Templates } from './types'
 
 export * from './templates/api/array-list'
@@ -19,7 +19,7 @@ export * from './templates/utils'
 export * from './templates'
 
 export const SchemaToFormElements = ( templates: Partial<Templates> ) => {
-  const schemaToFormElements = ( schema: JSONSchema4, name = '', value?: any ) => {
+  const schemaToFormElements = ( schema: JSONSchema7, name = '', value?: any ) => {
     if ( typeof schema.type !== 'string' )
       throw Error( 'Expected type to be a string' )
 

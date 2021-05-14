@@ -1,10 +1,10 @@
 import { SchemaTemplate } from '../../types'
-import { JSONSchema4 } from 'json-schema'
-import { getTitle } from '../utils';
+import { JSONSchema7 } from 'json-schema'
+import { getTitle } from '../utils'
 
 export const FieldsetDecorator =
   ( document: Document, containerTemplate: SchemaTemplate, useLegend = true ) => {
-    const fieldsetDecorator = ( schema: JSONSchema4 = {}, name = '', value?: any[] ) => {
+    const fieldsetDecorator = ( schema: JSONSchema7 = {}, name = '', value?: any[] ) => {
       const container = containerTemplate( schema, name, value )
       const title = getTitle( schema, name, 'Container' )
       const fieldset = document.createElement( 'fieldset' )

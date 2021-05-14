@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.BooleanTemplate = void 0;
 const utils_1 = require("../utils");
-exports.BooleanTemplate = (document) => {
+const BooleanTemplate = (document) => {
     const booleanTemplate = (schema = {}, name = '', value) => {
         const editor = document.createElement('input');
         editor.type = 'checkbox';
@@ -24,4 +25,5 @@ exports.BooleanTemplate = (document) => {
     };
     return booleanTemplate;
 };
+exports.BooleanTemplate = BooleanTemplate;
 //# sourceMappingURL=boolean.js.map

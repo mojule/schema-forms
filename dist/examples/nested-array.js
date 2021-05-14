@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.nestedArrayExample = void 0;
 const nestedArray = require("../schema/nested-array.schema.json");
 const array_1 = require("../templates/types/array");
 const number_1 = require("../templates/types/number");

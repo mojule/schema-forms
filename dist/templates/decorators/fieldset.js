@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.FieldsetDecorator = void 0;
 const utils_1 = require("../utils");
-exports.FieldsetDecorator = (document, containerTemplate, useLegend = true) => {
+const FieldsetDecorator = (document, containerTemplate, useLegend = true) => {
     const fieldsetDecorator = (schema = {}, name = '', value) => {
         const container = containerTemplate(schema, name, value);
         const title = utils_1.getTitle(schema, name, 'Container');
@@ -16,4 +17,5 @@ exports.FieldsetDecorator = (document, containerTemplate, useLegend = true) => {
     };
     return fieldsetDecorator;
 };
+exports.FieldsetDecorator = FieldsetDecorator;
 //# sourceMappingURL=fieldset.js.map

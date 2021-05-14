@@ -1,4 +1,4 @@
-import { JSONSchema4 } from 'json-schema';
+import { JSONSchema7 } from 'json-schema';
 import { Templates } from './types';
 export * from './templates/api/array-list';
 export * from './templates/decorators/fieldset';
@@ -16,4 +16,4 @@ export * from './templates/types/array/tuple';
 export * from './templates/types';
 export * from './templates/utils';
 export * from './templates';
-export declare const SchemaToFormElements: (templates: Partial<Templates>) => (schema: JSONSchema4, name?: string, value?: any) => HTMLElement;
+export declare const SchemaToFormElements: (templates: Partial<Templates>) => (schema: JSONSchema7, name?: string, value?: any) => HTMLElement;

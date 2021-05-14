@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.meta = exports.nestedArray = exports.simpleArray = exports.tupleArray = exports.stringsForm = exports.contactForm = void 0;
 const contactFormSchema = require("./contact-form.schema.json");
 const stringsSchema = require("./strings.schema.json");
 const nestedArraySchema = require("./nested-array.schema.json");

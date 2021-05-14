@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.contactFormExample = void 0;
 const contactForm = require("../schema/contact-form.schema.json");
 const object_1 = require("../templates/types/object");
 const string_1 = require("../templates/types/string");

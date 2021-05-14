@@ -1,5 +1,5 @@
-import * as Ajv from 'ajv'
-import { JSONSchema4 } from 'json-schema'
+import Ajv from 'ajv'
+import { JSONSchema7 } from 'json-schema'
 
 import * as schemas from '../schema'
 import * as data from '../schema/data'
@@ -12,9 +12,7 @@ const invalid = '❌'
 const unknown = '❓'
 
 const ajv = new Ajv( {
-  schemaId: 'id',
-  allErrors: true,
-  jsonPointers: true
+  allErrors: true
 } )
 
 ajv.addMetaSchema( schemas.meta )
@@ -273,7 +271,7 @@ const isSchemaValid = () => {
 
   if ( !schema ) return false
 
-  return ajv.validate( 'http://json-schema.org/draft-04/schema#', schema )
+  return ajv.validate( 'http://json-schema.org/draft-07/schema#', schema )
 }
 
 const isFormValid = () => {
@@ -304,7 +302,7 @@ const getCurrentSchema = () => {
       '.schema textarea'
     )
 
-    return <JSONSchema4>JSON.parse( schema.value )
+    return JSON.parse( schema.value ) as JSONSchema7
   } catch {
     return
   }

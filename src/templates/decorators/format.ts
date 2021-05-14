@@ -1,5 +1,5 @@
 import { StringFormatTemplates } from '../../types'
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 
 export const FormatDecorator =
   (
@@ -8,7 +8,7 @@ export const FormatDecorator =
     formatToTemplateKey = new Map<string,string>(),
     formatToTypeAttribute = defaultFormatToType
   ) => {
-    const formatDecorator = ( schema: JSONSchema4 = {}, name = '', value?: any[], isRequired = false ) => {
+    const formatDecorator = ( schema: JSONSchema7 = {}, name = '', value?: any[], isRequired = false ) => {
       const stringTemplate = stringTemplates.string
 
       let format: string

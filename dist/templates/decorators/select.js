@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SelectDecorator = void 0;
 const utils_1 = require("../utils");
-exports.SelectDecorator = (document, stringTemplate, predicate = (_schema) => true) => {
+const SelectDecorator = (document, stringTemplate, predicate = (_schema) => true) => {
     const selectDecorator = (schema = {}, name = '', value, isRequired = false) => {
         if (!Array.isArray(schema.enum) || !predicate(schema))
             return stringTemplate(schema, name, value, isRequired);
@@ -33,4 +34,5 @@ exports.SelectDecorator = (document, stringTemplate, predicate = (_schema) => tr
     };
     return selectDecorator;
 };
+exports.SelectDecorator = SelectDecorator;
 //# sourceMappingURL=select.js.map

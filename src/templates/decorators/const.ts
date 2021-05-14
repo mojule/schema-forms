@@ -1,11 +1,11 @@
 import { SchemaTemplate } from '../../types'
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 
 export const ConstDecorator = (
   _document: Document, stringOrNumberTemplate: SchemaTemplate
 ) => {
   const constDecorator = (
-    schema: JSONSchema4 = {}, name = '', value?: string | number,
+    schema: JSONSchema7 = {}, name = '', value?: string | number,
     isRequired = false
   ) => {
     if( Array.isArray( schema.enum ) && schema.enum.length === 1 ){

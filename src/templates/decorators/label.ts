@@ -1,10 +1,10 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { SchemaTemplate } from '../../types'
 import { getTitle } from '../utils'
 
 export const LabelDecorator =
   ( document: Document, inputTemplate: SchemaTemplate, isSuffix = false ) => {
-    const labelDecorator = ( schema: JSONSchema4 = {}, name = '', value?: any, isRequired = false ) => {
+    const labelDecorator = ( schema: JSONSchema7 = {}, name = '', value?: any, isRequired = false ) => {
       const editor = inputTemplate( schema, name, value, isRequired )
 
       const input = <HTMLInputElement | null>(

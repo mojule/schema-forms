@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ArrayListTemplate = void 0;
 const array_item_1 = require("./array-item");
 const utils_1 = require("../../utils");
-exports.ArrayListTemplate = (document, templates = {}) => {
+const ArrayListTemplate = (document, templates = {}) => {
     const arrayListEditor = (schema = {}, name = '', value) => {
         const container = document.createElement('div');
         container.title = utils_1.getTitle(schema, name, 'Array List');
@@ -11,7 +12,7 @@ exports.ArrayListTemplate = (document, templates = {}) => {
         if (!schema.items || Array.isArray(schema.items))
             return container;
         const childSchema = schema.items;
-        if (typeof childSchema.type !== 'string')
+        if (typeof childSchema === 'boolean' || typeof childSchema.type !== 'string')
             return container;
         const template = templates[childSchema.type];
         if (!template)
@@ -46,4 +47,5 @@ exports.ArrayListTemplate = (document, templates = {}) => {
     };
     return arrayListEditor;
 };
+exports.ArrayListTemplate = ArrayListTemplate;
 //# sourceMappingURL=array-list.js.map

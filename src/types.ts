@@ -1,4 +1,4 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 
 export type SchemaTemplateFactory =
   ( document: Document, ...deps: any[] ) => SchemaTemplate
@@ -16,7 +16,7 @@ export type StringTemplateFactory =
   ( document: Document, isMultiline?: boolean ) => SchemaTemplate
 
 export type SchemaTemplate =
-  ( schema?: JSONSchema4, name?: string, value?: any, isRequired?: boolean ) => HTMLElement
+  ( schema?: JSONSchema7, name?: string, value?: any, isRequired?: boolean ) => HTMLElement
 
 export interface Templates {
   array: SchemaTemplate

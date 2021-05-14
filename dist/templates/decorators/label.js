@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.LabelDecorator = void 0;
 const utils_1 = require("../utils");
-exports.LabelDecorator = (document, inputTemplate, isSuffix = false) => {
+const LabelDecorator = (document, inputTemplate, isSuffix = false) => {
     const labelDecorator = (schema = {}, name = '', value, isRequired = false) => {
         const editor = inputTemplate(schema, name, value, isRequired);
         const input = (editor.matches('input') ? editor :
@@ -24,4 +25,5 @@ exports.LabelDecorator = (document, inputTemplate, isSuffix = false) => {
     };
     return labelDecorator;
 };
+exports.LabelDecorator = LabelDecorator;
 //# sourceMappingURL=label.js.map

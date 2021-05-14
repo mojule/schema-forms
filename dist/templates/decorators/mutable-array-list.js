@@ -1,13 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.MutableArrayItemDecorator = exports.MutableArrayListDecorator = void 0;
 const array_list_1 = require("../api/array-list");
 const utils_1 = require("../utils");
 // TODO enforce minItems/maxItems
-exports.MutableArrayListDecorator = (document, Event, arrayList, templates) => {
+const MutableArrayListDecorator = (document, Event, arrayList, templates) => {
     const mutableArrayListDecorator = (schema = {}, name = '', value) => {
         const container = arrayList(schema, name, value);
         if (!schema.items ||
             Array.isArray(schema.items) ||
+            typeof schema.items === 'boolean' ||
             typeof schema.items.type !== 'string')
             return container;
         const api = array_list_1.ArrayListApi(document, container, schema, templates);
@@ -41,7 +43,8 @@ exports.MutableArrayListDecorator = (document, Event, arrayList, templates) => {
     };
     return mutableArrayListDecorator;
 };
-exports.MutableArrayItemDecorator = (document, arrayItem) => {
+exports.MutableArrayListDecorator = MutableArrayListDecorator;
+const MutableArrayItemDecorator = (document, arrayItem) => {
     const mutableArrayItemDecorator = (schema = {}, name = '', value) => {
         const item = arrayItem(schema, name, value);
         const title = `Delete ${utils_1.getTitle(schema, name, 'Item')}`;
@@ -54,4 +57,5 @@ exports.MutableArrayItemDecorator = (document, arrayItem) => {
     };
     return mutableArrayItemDecorator;
 };
+exports.MutableArrayItemDecorator = MutableArrayItemDecorator;
 //# sourceMappingURL=mutable-array-list.js.map

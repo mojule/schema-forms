@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ClientFormTemplates = exports.ServerFormTemplates = void 0;
 const array_1 = require("./types/array");
 const boolean_1 = require("./types/boolean");
 const number_1 = require("./types/number");
@@ -13,7 +14,7 @@ const array_list_1 = require("./types/array/array-list");
 const array_item_1 = require("./types/array/array-item");
 const select_1 = require("./decorators/select");
 const const_1 = require("./decorators/const");
-exports.ServerFormTemplates = (document) => {
+const ServerFormTemplates = (document) => {
     const templates = {};
     templates.array = fieldset_1.FieldsetDecorator(document, array_1.ArrayTemplate(document, templates));
     templates.boolean = label_1.LabelDecorator(document, boolean_1.BooleanTemplate(document), true);
@@ -26,10 +27,12 @@ exports.ServerFormTemplates = (document) => {
     }), schema => Array.isArray(schema.enum) && schema.enum.length > 1)));
     return templates;
 };
-exports.ClientFormTemplates = (document, Event) => {
+exports.ServerFormTemplates = ServerFormTemplates;
+const ClientFormTemplates = (document, Event) => {
     const templates = exports.ServerFormTemplates(document);
     templates.arrayList = fieldset_1.FieldsetDecorator(document, mutable_array_list_1.MutableArrayListDecorator(document, Event, array_list_1.ArrayListTemplate(document, templates), templates));
     templates.arrayItem = mutable_array_list_1.MutableArrayItemDecorator(document, array_item_1.ArrayItemTemplate(document, templates));
     return templates;
 };
+exports.ClientFormTemplates = ClientFormTemplates;
 //# sourceMappingURL=index.js.map

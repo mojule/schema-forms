@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FormatDecorator = (_document, stringTemplates, formatToTemplateKey = new Map(), formatToTypeAttribute = exports.defaultFormatToType) => {
+exports.defaultFormatToType = exports.FormatDecorator = void 0;
+const FormatDecorator = (_document, stringTemplates, formatToTemplateKey = new Map(), formatToTypeAttribute = exports.defaultFormatToType) => {
     const formatDecorator = (schema = {}, name = '', value, isRequired = false) => {
         const stringTemplate = stringTemplates.string;
         let format;
@@ -22,6 +23,7 @@ exports.FormatDecorator = (_document, stringTemplates, formatToTemplateKey = new
     };
     return formatDecorator;
 };
+exports.FormatDecorator = FormatDecorator;
 exports.defaultFormatToType = new Map();
 exports.defaultFormatToType.set('date-time', 'datetime-local');
 exports.defaultFormatToType.set('uri', 'url');

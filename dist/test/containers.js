@@ -114,7 +114,7 @@ describe('schema-forms', () => {
                 assert.strictEqual(child.defaultValue, 'qux');
             });
             it('populates child from default', () => {
-                const container = template(Object.assign({ type }, children, { default: value }));
+                const container = template(Object.assign(Object.assign({ type }, children), { default: value }));
                 const child = container.querySelector('input');
                 assert.strictEqual(child.defaultValue, 'qux');
             });
@@ -221,22 +221,22 @@ describe('schema-forms', () => {
                 const { type, children, template } = fixture;
                 testContainer('array-list');
                 it('minItems', () => {
-                    const container = template(Object.assign({ type }, children, { minItems: 2 }));
+                    const container = template(Object.assign(Object.assign({ type }, children), { minItems: 2 }));
                     const containerChildren = container.querySelectorAll('input');
                     assert.strictEqual(containerChildren.length, 2);
                 });
                 it('maxItems', () => {
-                    const container = template(Object.assign({ type }, children, { maxItems: 2 }));
+                    const container = template(Object.assign(Object.assign({ type }, children), { maxItems: 2 }));
                     const containerChildren = container.querySelectorAll('input');
                     assert.strictEqual(containerChildren.length, 2);
                 });
                 it('minItems overrides values', () => {
-                    const container = template(Object.assign({ type }, children, { minItems: 2 }), 'foo', ['qux']);
+                    const container = template(Object.assign(Object.assign({ type }, children), { minItems: 2 }), 'foo', ['qux']);
                     const containerChildren = container.querySelectorAll('input');
                     assert.strictEqual(containerChildren.length, 2);
                 });
                 it('maxItems overrides values', () => {
-                    const container = template(Object.assign({ type }, children, { maxItems: 2 }), 'foo', ['qux', 'wub', 'bub']);
+                    const container = template(Object.assign(Object.assign({ type }, children), { maxItems: 2 }), 'foo', ['qux', 'wub', 'bub']);
                     const containerChildren = container.querySelectorAll('input');
                     assert.strictEqual(containerChildren.length, 2);
                 });

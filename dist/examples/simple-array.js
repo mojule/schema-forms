@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.simpleArrayExample = void 0;
 const simpleArray = require("../schema/simple-array.schema.json");
 const array_1 = require("../templates/types/array");
 const number_1 = require("../templates/types/number");

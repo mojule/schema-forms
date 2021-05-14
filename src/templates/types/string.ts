@@ -1,10 +1,10 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { getTitle } from '../utils'
 import { StringTemplateFactory } from '../../types'
 
 export const StringTemplate: StringTemplateFactory =
   ( document: Document, isMultiline = false ) => {
-    const stringTemplate = ( schema: JSONSchema4 = {}, name = '', value?: string, isRequired = false ) => {
+    const stringTemplate = ( schema: JSONSchema7 = {}, name = '', value?: string, isRequired = false ) => {
       let editor: HTMLInputElement | HTMLTextAreaElement
 
       if( isMultiline ){

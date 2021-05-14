@@ -1,10 +1,10 @@
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { Templates, ContainerTemplateFactory } from '../../../types'
 import { getTitle, getChildName } from '../../utils'
 
 export const TupleTemplate: ContainerTemplateFactory =
   ( document: Document, templates: Partial<Templates> = {} ) => {
-    const tupleTemplate = ( schema: JSONSchema4 = {}, name = '', value?: any[], isRequired = false ) => {
+    const tupleTemplate = ( schema: JSONSchema7 = {}, name = '', value?: any[], isRequired = false ) => {
       const container = document.createElement( 'div' )
 
       container.title = getTitle( schema, name, 'Tuple' )
@@ -17,7 +17,10 @@ export const TupleTemplate: ContainerTemplateFactory =
         value = schema.default
 
       schema.items.forEach( ( childSchema, key ) => {
-        if ( typeof childSchema.type !== 'string' ) return
+        if ( 
+          typeof childSchema === 'boolean' || 
+          typeof childSchema.type !== 'string' 
+        ) return
 
         const template = templates[ childSchema.type ]
 

@@ -1,5 +1,5 @@
 import * as assert from 'assert'
-import { JSONSchema4 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema'
 import { document, form } from '../server/dom'
 import { Templates } from '../types'
 import {
@@ -15,7 +15,7 @@ describe( 'schema-forms', () => {
 
       templates.array = ArrayTemplate( document, templates )
 
-      const schema: JSONSchema4 = {
+      const schema: JSONSchema7 = {
         type: 'array',
         items: {
           type: 'string'
