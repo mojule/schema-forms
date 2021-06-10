@@ -39,4 +39,4 @@ export const SchemaToFormElements = ( templates: Partial<Templates> ) => {
 
 const schemaTypeNames = [
   'array', 'boolean', 'number', 'integer', 'object', 'string'
-]
+] 

@@ -2,9 +2,16 @@ import { JSONSchema7 } from 'json-schema'
 import { Templates, ContainerTemplateFactory } from '../../types'
 import { getTitle, getChildName } from '../utils'
 
-export const ObjectTemplate: ContainerTemplateFactory =
-  ( document: Document, templates: Partial<Templates> = {} ) => {
-    const objectTemplate = ( schema: JSONSchema7 = {}, name = '', value?: any ) => {
+export const ObjectTemplate: ContainerTemplateFactory = ( 
+  document: Document, 
+  templates: Partial<Templates> = {} 
+) => {
+
+    const objectTemplate = ( 
+      schema: JSONSchema7 = {}, 
+      name = '', 
+      value?: any 
+    ) => {
       const container = document.createElement( 'div' )
 
       container.title = getTitle( schema, name, 'Object' )

@@ -5,7 +5,12 @@ import { getChildName } from '../utils'
 
 // TODO enforce minItems/maxItems
 
-export const ArrayListApi = ( document: Document, container: HTMLElement, schema: JSONSchema7, templates: Partial<Templates> ) => {
+export const ArrayListApi = ( 
+  document: Document, 
+  container: HTMLElement, 
+  schema: JSONSchema7, 
+  templates: Partial<Templates> 
+): ArrayApi => {
   const list = container.querySelector( 'ol' )
 
   if ( !list )
@@ -85,7 +90,7 @@ export const ArrayListApi = ( document: Document, container: HTMLElement, schema
     }
   }
 
-  return <ArrayApi>{
+  return {
     get count() {
       return count()
     },

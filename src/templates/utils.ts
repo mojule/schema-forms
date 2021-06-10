@@ -76,4 +76,6 @@ export const keyToJsonPointer = ( key: string ) => {
 }
 
 export const entriesToPointers = ( entries: TypedFormEntry[] ) =>
-  entries.map( ( [ key, value ] ) => <TypedFormEntry>[ keyToJsonPointer( key ), value ] )
+  entries.map( 
+    ( [ key, value ] ) => <TypedFormEntry>[ keyToJsonPointer( key ), value ] 
+  )
