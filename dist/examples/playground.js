@@ -22,7 +22,7 @@ ajv.addFormat('color', /^\#[a-f0-9]{6}$/);
 ajv.addFormat('month', /^\d{4}-\d{1,2}$/);
 ajv.addFormat('week', /^\d{4}-W\d{1,2}$/);
 document.addEventListener('DOMContentLoaded', () => {
-    const schemaToDom = __1.SchemaToFormElements(templates_1.ClientFormTemplates(document, Event));
+    const schemaToDom = (0, __1.SchemaToFormElements)((0, templates_1.ClientFormTemplates)(document, Event));
     const { form, submit, select, schema, schemaSubmit, resultJson, resultFormData, resultSubmit, schemaSection, formSection, resultSection, schemaValid, formValid, resultValid, formErrors, schemaErrors, resultErrors, showJson, showFormData } = init();
     submit.onclick = e => {
         e.preventDefault();
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isFormValid())
             return;
         resultSection.classList.remove('invalid');
-        const value = get_data_1.getData(form);
+        const value = (0, get_data_1.getData)(form);
         resultJson.value = JSON.stringify(value, null, 2);
         const formData = new FormData(form);
         resultFormData.innerHTML = '';

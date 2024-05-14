@@ -15,7 +15,7 @@ const StringTemplate = (document, isMultiline = false) => {
                 editor.pattern = schema.pattern;
             }
         }
-        editor.title = utils_1.getTitle(schema, name, 'String');
+        editor.title = (0, utils_1.getTitle)(schema, name, 'String');
         if (isRequired)
             editor.setAttribute('required', '');
         if (name)

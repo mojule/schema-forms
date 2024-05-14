@@ -10,7 +10,7 @@ const SelectDecorator = (document, stringTemplate, predicate = (_schema) => true
             throw Error('Expected enum to be an array of strings');
         const enumValues = schema.enum;
         const editor = document.createElement('select');
-        editor.title = utils_1.getTitle(schema, name, 'String');
+        editor.title = (0, utils_1.getTitle)(schema, name, 'String');
         if (isRequired)
             editor.setAttribute('required', '');
         if (name)

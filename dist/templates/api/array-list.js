@@ -22,10 +22,10 @@ const ArrayListApi = (document, container, schema, templates) => {
     const add = (value) => {
         let arrayItem = templates.arrayItem;
         if (!arrayItem) {
-            arrayItem = array_item_1.ArrayItemTemplate(document, templates);
+            arrayItem = (0, array_item_1.ArrayItemTemplate)(document, templates);
         }
         const key = count();
-        const childName = utils_1.getChildName(name, count());
+        const childName = (0, utils_1.getChildName)(name, count());
         const li = arrayItem(childSchema, childName, value);
         list.appendChild(li);
         return key;
@@ -40,8 +40,8 @@ const ArrayListApi = (document, container, schema, templates) => {
     const renumber = (previousCount, from) => {
         const name = container.dataset.name || '';
         for (let i = from; i < previousCount; i++) {
-            const oldName = utils_1.getChildName(name, i);
-            const newName = utils_1.getChildName(name, i - 1);
+            const oldName = (0, utils_1.getChildName)(name, i);
+            const newName = (0, utils_1.getChildName)(name, i - 1);
             const targets = Array.from(list.querySelectorAll('[name]'));
             targets.forEach(target => {
                 if (target.name.startsWith(oldName)) {

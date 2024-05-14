@@ -6,7 +6,7 @@ const __1 = require("..");
 describe('schema-forms', () => {
     describe('exports', () => {
         describe('TypeTemplates', () => {
-            const typeTemplates = __1.TypeTemplates(dom_1.document);
+            const typeTemplates = (0, __1.TypeTemplates)(dom_1.document);
             const localNames = {
                 array: 'div',
                 boolean: 'input',
@@ -28,7 +28,7 @@ describe('schema-forms', () => {
             });
         });
         describe('ServerFormTemplates', () => {
-            const formTemplates = __1.ServerFormTemplates(dom_1.document);
+            const formTemplates = (0, __1.ServerFormTemplates)(dom_1.document);
             const localNames = {
                 array: 'fieldset',
                 boolean: 'label',
@@ -50,7 +50,7 @@ describe('schema-forms', () => {
             });
         });
         describe('ClientFormTemplates', () => {
-            const clientFormTemplates = __1.ClientFormTemplates(dom_1.document, dom_1.Event);
+            const clientFormTemplates = (0, __1.ClientFormTemplates)(dom_1.document, dom_1.Event);
             const localNames = {
                 array: 'fieldset',
                 boolean: 'label',
@@ -80,8 +80,8 @@ describe('schema-forms', () => {
             });
         });
         describe('SchemaToFormElements', () => {
-            const server = __1.SchemaToFormElements(__1.ServerFormTemplates(dom_1.document));
-            const client = __1.SchemaToFormElements(__1.ClientFormTemplates(dom_1.document, dom_1.Event));
+            const server = (0, __1.SchemaToFormElements)((0, __1.ServerFormTemplates)(dom_1.document));
+            const client = (0, __1.SchemaToFormElements)((0, __1.ClientFormTemplates)(dom_1.document, dom_1.Event));
             describe('server', () => {
                 const localNames = {
                     array: 'fieldset',
@@ -125,8 +125,8 @@ describe('schema-forms', () => {
                 assert.throws(() => server({ type: 'arrayItem' }));
             });
             it('must have template for type', () => {
-                const templates = { string: __1.StringTemplate(dom_1.document) };
-                assert.throws(() => __1.SchemaToFormElements(templates)({ type: 'number' }));
+                const templates = { string: (0, __1.StringTemplate)(dom_1.document) };
+                assert.throws(() => (0, __1.SchemaToFormElements)(templates)({ type: 'number' }));
             });
         });
     });

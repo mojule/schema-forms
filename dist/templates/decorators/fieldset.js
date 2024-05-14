@@ -5,7 +5,7 @@ const utils_1 = require("../utils");
 const FieldsetDecorator = (document, containerTemplate, useLegend = true) => {
     const fieldsetDecorator = (schema = {}, name = '', value) => {
         const container = containerTemplate(schema, name, value);
-        const title = utils_1.getTitle(schema, name, 'Container');
+        const title = (0, utils_1.getTitle)(schema, name, 'Container');
         const fieldset = document.createElement('fieldset');
         if (useLegend) {
             const legend = document.createElement('legend');

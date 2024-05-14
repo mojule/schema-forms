@@ -20,10 +20,10 @@ describe('schema-forms', () => {
                     }
                 },
                 childName: 'bar',
-                template: __1.ObjectTemplate(dom_1.document, {
-                    string: __1.StringTemplate(dom_1.document)
+                template: (0, __1.ObjectTemplate)(dom_1.document, {
+                    string: (0, __1.StringTemplate)(dom_1.document)
                 }),
-                bareTemplate: __1.ObjectTemplate(dom_1.document),
+                bareTemplate: (0, __1.ObjectTemplate)(dom_1.document),
                 value: { bar: 'qux' }
             },
             tuple: {
@@ -40,10 +40,10 @@ describe('schema-forms', () => {
                     ]
                 },
                 childName: '0',
-                template: __1.TupleTemplate(dom_1.document, {
-                    string: __1.StringTemplate(dom_1.document)
+                template: (0, __1.TupleTemplate)(dom_1.document, {
+                    string: (0, __1.StringTemplate)(dom_1.document)
                 }),
-                bareTemplate: __1.TupleTemplate(dom_1.document),
+                bareTemplate: (0, __1.TupleTemplate)(dom_1.document),
                 value: ['qux']
             },
             'array-list': {
@@ -60,10 +60,10 @@ describe('schema-forms', () => {
                     }
                 },
                 childName: '0',
-                template: __1.ArrayListTemplate(dom_1.document, {
-                    string: __1.StringTemplate(dom_1.document)
+                template: (0, __1.ArrayListTemplate)(dom_1.document, {
+                    string: (0, __1.StringTemplate)(dom_1.document)
                 }),
-                bareTemplate: __1.ArrayListTemplate(dom_1.document),
+                bareTemplate: (0, __1.ArrayListTemplate)(dom_1.document),
                 value: ['qux']
             }
         };
@@ -136,15 +136,15 @@ describe('schema-forms', () => {
         });
         describe('array', () => {
             it('array creates an empty container when no schema', () => {
-                const container = __1.ArrayTemplate(dom_1.document)();
+                const container = (0, __1.ArrayTemplate)(dom_1.document)();
                 assert.strictEqual(container.childElementCount, 0);
             });
             it('arrayItem creates an empty li when no type', () => {
-                const el = __1.ArrayItemTemplate(dom_1.document)();
+                const el = (0, __1.ArrayItemTemplate)(dom_1.document)();
                 assert.strictEqual(el.childElementCount, 0);
             });
             it('calls implicit tuple delegate', () => {
-                const arrayTemplate = __1.ArrayTemplate(dom_1.document, { string: __1.StringTemplate(dom_1.document) });
+                const arrayTemplate = (0, __1.ArrayTemplate)(dom_1.document, { string: (0, __1.StringTemplate)(dom_1.document) });
                 const container = arrayTemplate({
                     type: 'array',
                     items: [
@@ -156,10 +156,10 @@ describe('schema-forms', () => {
             });
             it('calls explicit tuple delegate', () => {
                 const templates = {
-                    string: __1.StringTemplate(dom_1.document)
+                    string: (0, __1.StringTemplate)(dom_1.document)
                 };
-                templates.tuple = __1.TupleTemplate(dom_1.document, templates);
-                const arrayTemplate = __1.ArrayTemplate(dom_1.document, templates);
+                templates.tuple = (0, __1.TupleTemplate)(dom_1.document, templates);
+                const arrayTemplate = (0, __1.ArrayTemplate)(dom_1.document, templates);
                 const container = arrayTemplate({
                     type: 'array',
                     items: [
@@ -170,7 +170,7 @@ describe('schema-forms', () => {
                 assert.strictEqual(container.firstElementChild.type, 'text');
             });
             it('calls implicit array-list delegate', () => {
-                const arrayTemplate = __1.ArrayTemplate(dom_1.document, { string: __1.StringTemplate(dom_1.document) });
+                const arrayTemplate = (0, __1.ArrayTemplate)(dom_1.document, { string: (0, __1.StringTemplate)(dom_1.document) });
                 const container = arrayTemplate({
                     type: 'array',
                     items: {
@@ -185,10 +185,10 @@ describe('schema-forms', () => {
             });
             it('calls explicit array-list delegate', () => {
                 const templates = {
-                    string: __1.StringTemplate(dom_1.document)
+                    string: (0, __1.StringTemplate)(dom_1.document)
                 };
-                templates.arrayList = __1.ArrayListTemplate(dom_1.document, templates);
-                const arrayTemplate = __1.ArrayTemplate(dom_1.document, templates);
+                templates.arrayList = (0, __1.ArrayListTemplate)(dom_1.document, templates);
+                const arrayTemplate = (0, __1.ArrayTemplate)(dom_1.document, templates);
                 const container = arrayTemplate({
                     type: 'array',
                     items: {
@@ -202,7 +202,7 @@ describe('schema-forms', () => {
                 assert.strictEqual(inputs.length, 1);
             });
             it('passes schema.default to delegate', () => {
-                const arrayTemplate = __1.ArrayTemplate(dom_1.document, { string: __1.StringTemplate(dom_1.document) });
+                const arrayTemplate = (0, __1.ArrayTemplate)(dom_1.document, { string: (0, __1.StringTemplate)(dom_1.document) });
                 const container = arrayTemplate({
                     type: 'array',
                     items: [
@@ -242,17 +242,17 @@ describe('schema-forms', () => {
                 });
             });
             describe('array-item', () => {
-                const template = __1.ArrayItemTemplate(dom_1.document, { string: __1.StringTemplate(dom_1.document) });
+                const template = (0, __1.ArrayItemTemplate)(dom_1.document, { string: (0, __1.StringTemplate)(dom_1.document) });
                 it('creates', () => {
                     const item = template({});
                     assert.strictEqual(item.localName, 'li');
                 });
                 it('creates child', () => {
-                    const item = __1.ArrayItemTemplate(dom_1.document, { string: __1.StringTemplate(dom_1.document) })({ type: 'string' });
+                    const item = (0, __1.ArrayItemTemplate)(dom_1.document, { string: (0, __1.StringTemplate)(dom_1.document) })({ type: 'string' });
                     assert.strictEqual(item.childElementCount, 1);
                 });
                 it('ignores type on child that has no template', () => {
-                    const item = __1.ArrayItemTemplate(dom_1.document)({ type: 'string' });
+                    const item = (0, __1.ArrayItemTemplate)(dom_1.document)({ type: 'string' });
                     assert.strictEqual(item.childElementCount, 0);
                 });
             });

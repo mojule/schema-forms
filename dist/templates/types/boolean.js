@@ -6,7 +6,7 @@ const BooleanTemplate = (document) => {
     const booleanTemplate = (schema = {}, name = '', value) => {
         const editor = document.createElement('input');
         editor.type = 'checkbox';
-        editor.title = utils_1.getTitle(schema, name, 'Boolean');
+        editor.title = (0, utils_1.getTitle)(schema, name, 'Boolean');
         if (Array.isArray(schema.enum) &&
             schema.enum.length === 1 &&
             schema.enum[0] === true)

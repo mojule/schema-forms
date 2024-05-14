@@ -16,22 +16,22 @@ const select_1 = require("./decorators/select");
 const const_1 = require("./decorators/const");
 const ServerFormTemplates = (document) => {
     const templates = {};
-    templates.array = fieldset_1.FieldsetDecorator(document, array_1.ArrayTemplate(document, templates));
-    templates.boolean = label_1.LabelDecorator(document, boolean_1.BooleanTemplate(document), true);
-    templates.number = label_1.LabelDecorator(document, const_1.ConstDecorator(document, number_1.NumberTemplate(document)));
+    templates.array = (0, fieldset_1.FieldsetDecorator)(document, (0, array_1.ArrayTemplate)(document, templates));
+    templates.boolean = (0, label_1.LabelDecorator)(document, (0, boolean_1.BooleanTemplate)(document), true);
+    templates.number = (0, label_1.LabelDecorator)(document, (0, const_1.ConstDecorator)(document, (0, number_1.NumberTemplate)(document)));
     templates.integer = templates.number;
-    templates.object = fieldset_1.FieldsetDecorator(document, object_1.ObjectTemplate(document, templates));
-    templates.string = label_1.LabelDecorator(document, const_1.ConstDecorator(document, select_1.SelectDecorator(document, format_1.FormatDecorator(document, {
-        string: string_1.StringTemplate(document),
-        multiline: string_1.StringTemplate(document, true)
+    templates.object = (0, fieldset_1.FieldsetDecorator)(document, (0, object_1.ObjectTemplate)(document, templates));
+    templates.string = (0, label_1.LabelDecorator)(document, (0, const_1.ConstDecorator)(document, (0, select_1.SelectDecorator)(document, (0, format_1.FormatDecorator)(document, {
+        string: (0, string_1.StringTemplate)(document),
+        multiline: (0, string_1.StringTemplate)(document, true)
     }), schema => Array.isArray(schema.enum) && schema.enum.length > 1)));
     return templates;
 };
 exports.ServerFormTemplates = ServerFormTemplates;
 const ClientFormTemplates = (document, Event) => {
-    const templates = exports.ServerFormTemplates(document);
-    templates.arrayList = fieldset_1.FieldsetDecorator(document, mutable_array_list_1.MutableArrayListDecorator(document, Event, array_list_1.ArrayListTemplate(document, templates), templates));
-    templates.arrayItem = mutable_array_list_1.MutableArrayItemDecorator(document, array_item_1.ArrayItemTemplate(document, templates));
+    const templates = (0, exports.ServerFormTemplates)(document);
+    templates.arrayList = (0, fieldset_1.FieldsetDecorator)(document, (0, mutable_array_list_1.MutableArrayListDecorator)(document, Event, (0, array_list_1.ArrayListTemplate)(document, templates), templates));
+    templates.arrayItem = (0, mutable_array_list_1.MutableArrayItemDecorator)(document, (0, array_item_1.ArrayItemTemplate)(document, templates));
     return templates;
 };
 exports.ClientFormTemplates = ClientFormTemplates;
