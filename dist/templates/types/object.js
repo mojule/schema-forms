@@ -5,7 +5,7 @@ const utils_1 = require("../utils");
 const ObjectTemplate = (document, templates = {}) => {
     const objectTemplate = (schema = {}, name = '', value) => {
         const container = document.createElement('div');
-        container.title = utils_1.getTitle(schema, name, 'Object');
+        container.title = (0, utils_1.getTitle)(schema, name, 'Object');
         if (name)
             container.dataset.name = name;
         if (!schema.properties)
@@ -26,7 +26,7 @@ const ObjectTemplate = (document, templates = {}) => {
                 childValue = value[key];
             }
             const isRequired = required.includes(key);
-            const childName = utils_1.getChildName(name, key);
+            const childName = (0, utils_1.getChildName)(name, key);
             const editor = template(childSchema, childName, childValue, isRequired);
             container.appendChild(editor);
         });

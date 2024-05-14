@@ -1,10 +1,10 @@
 import { JSONSchema7 } from 'json-schema';
-export declare type SchemaTemplateFactory = (document: Document, ...deps: any[]) => SchemaTemplate;
-export declare type ContainerTemplateFactory = (document: Document, templates?: Partial<Templates>) => SchemaTemplate;
-export declare type PrimitiveTemplateFactory = (document: Document) => SchemaTemplate;
-export declare type NumberTemplateFactory = (document: Document, isRange?: boolean) => SchemaTemplate;
-export declare type StringTemplateFactory = (document: Document, isMultiline?: boolean) => SchemaTemplate;
-export declare type SchemaTemplate = (schema?: JSONSchema7, name?: string, value?: any, isRequired?: boolean) => HTMLElement;
+export type SchemaTemplateFactory = (document: Document, ...deps: any[]) => SchemaTemplate;
+export type ContainerTemplateFactory = (document: Document, templates?: Partial<Templates>) => SchemaTemplate;
+export type PrimitiveTemplateFactory = (document: Document) => SchemaTemplate;
+export type NumberTemplateFactory = (document: Document, isRange?: boolean) => SchemaTemplate;
+export type StringTemplateFactory = (document: Document, isMultiline?: boolean) => SchemaTemplate;
+export type SchemaTemplate = (schema?: JSONSchema7, name?: string, value?: any, isRequired?: boolean) => HTMLElement;
 export interface Templates {
     array: SchemaTemplate;
     boolean: SchemaTemplate;
@@ -17,6 +17,6 @@ export interface Templates {
 export interface StringFormatTemplates extends Partial<Templates> {
     string: SchemaTemplate;
 }
-export declare type TypedFormEntryValue = string | number | boolean | null;
-export declare type TypedFormEntry = [string, TypedFormEntryValue];
-export declare type EditorElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+export type TypedFormEntryValue = string | number | boolean | null;
+export type TypedFormEntry = [string, TypedFormEntryValue];
+export type EditorElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;

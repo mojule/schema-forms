@@ -12,7 +12,7 @@ const H = (document, name) => (attributes = {}, ...children) => {
     return el;
 };
 exports.H = H;
-const Form = (document) => exports.H(document, 'form');
+const Form = (document) => (0, exports.H)(document, 'form');
 exports.Form = Form;
 const getEntries = (form, allowEmptyValue = true) => {
     const result = [];
@@ -48,6 +48,6 @@ const keyToJsonPointer = (key) => {
     return key;
 };
 exports.keyToJsonPointer = keyToJsonPointer;
-const entriesToPointers = (entries) => entries.map(([key, value]) => [exports.keyToJsonPointer(key), value]);
+const entriesToPointers = (entries) => entries.map(([key, value]) => [(0, exports.keyToJsonPointer)(key), value]);
 exports.entriesToPointers = entriesToPointers;
 //# sourceMappingURL=utils.js.map

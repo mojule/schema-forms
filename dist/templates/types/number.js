@@ -6,7 +6,7 @@ const NumberTemplate = (document, isRange = false) => {
     const numberTemplate = (schema = {}, name = '', value, isRequired = false) => {
         const editor = document.createElement('input');
         editor.type = isRange ? 'range' : 'number';
-        editor.title = utils_1.getTitle(schema, name, schema.type === 'integer' ? 'Integer' : 'Number');
+        editor.title = (0, utils_1.getTitle)(schema, name, schema.type === 'integer' ? 'Integer' : 'Number');
         if (isRequired)
             editor.setAttribute('required', '');
         if (name)

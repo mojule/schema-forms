@@ -5,7 +5,7 @@ const utils_1 = require("../../utils");
 const TupleTemplate = (document, templates = {}) => {
     const tupleTemplate = (schema = {}, name = '', value, isRequired = false) => {
         const container = document.createElement('div');
-        container.title = utils_1.getTitle(schema, name, 'Tuple');
+        container.title = (0, utils_1.getTitle)(schema, name, 'Tuple');
         if (name)
             container.dataset.name = name;
         if (!Array.isArray(schema.items))
@@ -23,7 +23,7 @@ const TupleTemplate = (document, templates = {}) => {
             if (Array.isArray(value)) {
                 childValue = value[key];
             }
-            const childName = utils_1.getChildName(name, key);
+            const childName = (0, utils_1.getChildName)(name, key);
             const editor = template(childSchema, childName, childValue, isRequired);
             container.appendChild(editor);
         });

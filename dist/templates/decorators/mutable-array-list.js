@@ -12,8 +12,8 @@ const MutableArrayListDecorator = (document, Event, arrayList, templates) => {
             typeof schema.items === 'boolean' ||
             typeof schema.items.type !== 'string')
             return container;
-        const api = array_list_1.ArrayListApi(document, container, schema, templates);
-        const title = `Add ${utils_1.getTitle(schema.items, '', 'Item')}`;
+        const api = (0, array_list_1.ArrayListApi)(document, container, schema, templates);
+        const title = `Add ${(0, utils_1.getTitle)(schema.items, '', 'Item')}`;
         const addButton = document.createElement('button');
         addButton.type = 'button';
         addButton.innerHTML = title;
@@ -47,7 +47,7 @@ exports.MutableArrayListDecorator = MutableArrayListDecorator;
 const MutableArrayItemDecorator = (document, arrayItem) => {
     const mutableArrayItemDecorator = (schema = {}, name = '', value) => {
         const item = arrayItem(schema, name, value);
-        const title = `Delete ${utils_1.getTitle(schema, name, 'Item')}`;
+        const title = `Delete ${(0, utils_1.getTitle)(schema, name, 'Item')}`;
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.innerHTML = title;

@@ -12,7 +12,7 @@ const LabelDecorator = (document, inputTemplate, isSuffix = false) => {
         const label = document.createElement('label');
         const span = document.createElement('span');
         span.innerHTML =
-            `${utils_1.getTitle(schema, name, 'Input')}${isRequired ? '*' : ''}`;
+            `${(0, utils_1.getTitle)(schema, name, 'Input')}${isRequired ? '*' : ''}`;
         if (isSuffix) {
             label.appendChild(editor);
             label.appendChild(span);

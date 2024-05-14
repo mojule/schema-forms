@@ -25,10 +25,10 @@ describe('schema-forms', () => {
                 string: 'foo'
             };
             const templates = {
-                boolean: __1.BooleanTemplate(dom_1.document),
-                number: __1.NumberTemplate(dom_1.document),
-                integer: __1.NumberTemplate(dom_1.document),
-                string: __1.StringTemplate(dom_1.document)
+                boolean: (0, __1.BooleanTemplate)(dom_1.document),
+                number: (0, __1.NumberTemplate)(dom_1.document),
+                integer: (0, __1.NumberTemplate)(dom_1.document),
+                string: (0, __1.StringTemplate)(dom_1.document)
             };
             const values = {
                 boolean: true,
@@ -97,7 +97,7 @@ describe('schema-forms', () => {
                             assert.strictEqual(input.max, '2');
                         });
                         it('range', () => {
-                            const input = __1.NumberTemplate(dom_1.document, true)();
+                            const input = (0, __1.NumberTemplate)(dom_1.document, true)();
                             assert.strictEqual(input.type, 'range');
                         });
                     }
@@ -109,7 +109,7 @@ describe('schema-forms', () => {
                     }
                     if (type === 'string') {
                         it('multiline', () => {
-                            const input = __1.StringTemplate(dom_1.document, true)();
+                            const input = (0, __1.StringTemplate)(dom_1.document, true)();
                             assert.strictEqual(input.localName, 'textarea');
                         });
                         it('pattern', () => {
